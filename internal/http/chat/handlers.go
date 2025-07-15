@@ -44,8 +44,6 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 	if encodeErr != nil {
 		http.Error(w, encodeErr.Error(), http.StatusBadGateway)
 	}
-
-
 }
 
 func (h *ChatHandler) GetHistory(w http.ResponseWriter, r *http.Request) {

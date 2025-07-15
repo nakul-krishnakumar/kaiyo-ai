@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/llm"
@@ -22,6 +23,7 @@ type Model struct {
 type Message struct {
 	Role string
 	Content string
+	CreatedAt time.Time
 }
 
 type Controller struct {
@@ -118,5 +120,10 @@ func (c *Controller) SendMessage(ctx context.Context, chatID, userID, content st
 }
 
 func (c *Controller) GetHistory(chatID string) ([]openai.ChatCompletionMessageParamUnion, error) {
+	// instead of keeping history as chatcompletion obj, 
+	// keep it as a []Message object
+	// then write a function to convert []Message to chatcompletion
+	// this should run once at the beginning of the chat session
+
 	return c.History, nil
 }
