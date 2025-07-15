@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/config"
+	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/chat"
 )
 
 func main() {
@@ -18,16 +19,23 @@ func main() {
 	cfg := config.MustLoad()
 
 	// http mux constructor
-	mux := http.NewServeMux()
+	mainMux := http.NewServeMux()
 
-	// default endpoint
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	chatMux := chat.NewMux()
+
+	apiMux := http.NewServeMux()
+	apiMux.Handle("/chats/", http.StripPrefix("/chats", chatMux)) // /api/v1/chats
+
+
+	mainMux.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux)) // /api/v1/
+
+	// default endpoint - {$} makes it very specific
+	mainMux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte("Welcome to Kaiyo AI!"))
 
 		if err != nil {
-			slog.Error("Could not establish connection", slog.String("error", err.Error()))
-			os.Exit(1)
+			slog.Error("Could not write response", slog.String("error", err.Error()))
 		}
 	})
 
@@ -35,7 +43,7 @@ func main() {
 
 	server := http.Server{
 		Addr: addr,
-		Handler: mux,
+		Handler: mainMux,
 	}
 
 	slog.Info("Server listening on http://" + addr)
@@ -45,6 +53,7 @@ func main() {
 
 	// to read interrupts
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM) 
+	// when any of the above mention signals is observed, it sent it into the 'done' channel which stop the goroutine
 
 	go func() {
 		err := server.ListenAndServe(); 
