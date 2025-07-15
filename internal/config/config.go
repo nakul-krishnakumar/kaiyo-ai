@@ -26,7 +26,7 @@ func MustLoad() *Config {
         slog.Warn("No .env file found or error loading it", slog.String("error", err.Error()))
     }
 
-	configPath := os.Getenv("CONFIG_PATH")
+	configPath := os.Getenv("DEV_CONFIG_PATH")
 
 	if configPath == "" {
 		flags := flag.String("config", "", "path to the configuration file")

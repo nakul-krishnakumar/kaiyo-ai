@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 )
@@ -27,15 +28,17 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 		return
 	} 
 
-	reply, err := h.Controller.SendMessage(reqBody.ChatID, reqBody.UserID, reqBody.Content,)
+	reply, err := h.Controller.SendMessage(context.Background(), reqBody.ChatID, reqBody.UserID, reqBody.Content,)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	
+	resp := reply.Choices[0].Message.Content
 	encodeErr := json.NewEncoder(w).Encode(map[string]string{
-		"reply" : reply,
+		"reply" : resp,
 	}) 
 	
 	if encodeErr != nil {

@@ -1,0 +1,3 @@
+model_name: "kairo-ai-o4-mini"
+model_type: "openai-azure"
+system_prompt: "You are a travel assistant who is highly experienced. Your task is to assist the user to plan out their tour plans."
