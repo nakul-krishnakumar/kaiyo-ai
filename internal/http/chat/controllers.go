@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/llm"
@@ -22,6 +23,7 @@ type Model struct {
 type Message struct {
 	Role string
 	Content string
+	CreatedAt time.Time
 }
 
 type Controller struct {
@@ -48,7 +50,7 @@ func NewController() *Controller {
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-		if err := v.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		slog.Error("Failed to read config file", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
@@ -62,8 +64,6 @@ func NewController() *Controller {
 	if model.Name == "" {
 		slog.Error("No model name specified")
 	}
-
-	// fmt.Print(model)
 
 	if model.SystemPrompt == "" {
 		slog.Error("No system prompt specified")
@@ -85,38 +85,73 @@ func NewController() *Controller {
 	}
 }
 
-func (c *Controller) SendMessage(ctx context.Context, chatID, userID, content string) (*openai.ChatCompletion, error) {
+func (c *Controller) StreamMessage(
+	ctx context.Context, 
+	userInput UserInput, 
+	chunkCh chan<- string,
+) error {
+
+	defer close(chunkCh) // close the channel at the end of this function
+
 	// add user query to context history
 	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
 		OfUser: &openai.ChatCompletionUserMessageParam{
 			Content: openai.ChatCompletionUserMessageParamContentUnion{
-				OfString: openai.String(content),
+				OfString: openai.String(userInput.Content),
 			},
 		},
 	})
 
-
-	resp, err := c.Client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
+	stream := c.Client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
 		Model: openai.ChatModel(c.Model.Name),
 		Messages: c.History,
-	})
-
-	// add assitant response to context history
-	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
-		OfAssistant: &openai.ChatCompletionAssistantMessageParam{
-			Content: openai.ChatCompletionAssistantMessageParamContentUnion{
-				OfString: openai.String(resp.Choices[0].Message.Content),
-			},
+		StreamOptions: openai.ChatCompletionStreamOptionsParam{
+			IncludeUsage: openai.Bool(true),
 		},
 	})
 
-	if err != nil {
-		return nil, fmt.Errorf("chat api error: %w", err)
-	}
+	acc := openai.ChatCompletionAccumulator{}
+	var tokenBuilder strings.Builder
 
-	return resp, nil
+	for stream.Next() { // returns false when stream ends
+        chunk := stream.Current()
+        acc.AddChunk(chunk)
+
+		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
+			delta := chunk.Choices[0].Delta.Content
+			tokenBuilder.WriteString(delta)
+			chunkCh <- delta // add the response chunk to channel
+		}
+
+        // if _, ok := acc.JustFinishedToolCall(); ok {
+        //     // Extract and invoke tool function.
+        //     // Then feed the result back by calling the LLM again
+        // }
+    }
+
+    if err := stream.Err(); err != nil {
+        return fmt.Errorf("chat streaming error: %w", err)
+    }
+
+    finalContent := tokenBuilder.String()
+
+    // Add assistant response to History
+    c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+        OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+            Content: openai.ChatCompletionAssistantMessageParamContentUnion{
+                OfString: openai.String(finalContent),
+            },
+        },
+    })
+
+	return nil
 }
 
 func (c *Controller) GetHistory(chatID string) ([]openai.ChatCompletionMessageParamUnion, error) {
+	// instead of keeping history as chatcompletion obj, 
+	// keep it as a []Message object
+	// then write a function to convert []Message to chatcompletion
+	// this should run once at the beginning of the chat session
+
 	return c.History, nil
 }

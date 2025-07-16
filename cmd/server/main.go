@@ -21,11 +21,8 @@ func main() {
 	// http mux constructor
 	mainMux := http.NewServeMux()
 
-	chatMux := chat.NewMux()
-
 	apiMux := http.NewServeMux()
-	apiMux.Handle("/chats/", http.StripPrefix("/chats", chatMux)) // /api/v1/chats
-
+	apiMux.Handle("/chats/", http.StripPrefix("/chats", chat.New())) // /api/v1/chats
 
 	mainMux.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux)) // /api/v1/
 
