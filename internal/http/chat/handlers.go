@@ -1,13 +1,19 @@
 package chat
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
 type ChatHandler struct {
 	Controller *Controller
+}
+
+type UserInput struct {
+	ChatID string
+	UserID string
+	Content string
 }
 
 func NewHandler(ctrl *Controller) *ChatHandler {
@@ -16,34 +22,54 @@ func NewHandler(ctrl *Controller) *ChatHandler {
 
 // POST api/v1/chats/
 func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
-	var reqBody struct { ChatID, UserID, Content string }
-	
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+
+	chunkCh := make(chan string)
+	done := make(chan error, 1)
+
+	ctx := r.Context()
+
+	// Immediate streaming without waiting for the entire response
+	flusher, ok := w.(http.Flusher); 
+	if !ok {
+		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	userInput :=  UserInput{}
+	if err := json.NewDecoder(r.Body).Decode(&userInput); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if reqBody.Content == "" {
+	if userInput.Content == "" {
 		http.Error(w, "content is missing", http.StatusBadRequest)
 		return
 	} 
 
-	reply, err := h.Controller.SendMessage(context.Background(), reqBody.ChatID, reqBody.UserID, reqBody.Content,)
+	go func() {
+		done <- h.Controller.StreamMessage(ctx, userInput, chunkCh)	
+	}()
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// listen to both done and chunkCh channels at the same time
+	for { // inifinite loop
+		select { // listen from the channel which gives output first
+		case <-ctx.Done():
+			return
+	
+		case err := <-done:
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 
-	
-	resp := reply.Choices[0].Message.Content
-	encodeErr := json.NewEncoder(w).Encode(map[string]string{
-		"reply" : resp,
-	}) 
-	
-	if encodeErr != nil {
-		http.Error(w, encodeErr.Error(), http.StatusBadGateway)
-	}
+		case chunk, ok := <-chunkCh:
+			if !ok { return }
+			fmt.Fprintf(w, "data: %s\n\n", chunk) // buffer
+			flusher.Flush() // returns the buffer
+
+			fmt.Print(chunk)
+		}
+  	}
 }
 
 func (h *ChatHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
