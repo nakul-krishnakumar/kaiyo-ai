@@ -6,16 +6,6 @@ import (
 	"net/http"
 )
 
-type ChatHandler struct {
-	Controller *Controller
-}
-
-type UserInput struct {
-	ChatID string
-	UserID string
-	Content string
-}
-
 func NewHandler(ctrl *Controller) *ChatHandler {
 	return &ChatHandler{ Controller: ctrl }
 }
