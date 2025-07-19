@@ -14,11 +14,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func NewController(auth *AuthConfig) *Controller {
-	return &Controller{ auth }
+func NewController(config *Config) *Controller {
+	return &Controller{ config }
 }
 
-func MustLoad() *AuthConfig {
+func MustLoad() *Config {
 	if err := godotenv.Load(); err != nil {
 		slog.Error("Error loading authentication secrets" + err.Error())	
 	}
@@ -45,7 +45,7 @@ func MustLoad() *AuthConfig {
 		slog.Error("could not load refresh TTL " + err.Error())
 	}
 
-	return &AuthConfig{
+	return &Config{
 		AccessSecret: accessSecret,
 		RefreshSecret: refreshSecret,
 		AccessTTL: accessTTL,
@@ -53,9 +53,9 @@ func MustLoad() *AuthConfig {
 	}
 }
 
-// getter AuthConfig
-func (a *AuthConfig) GetAccessSecret() []byte {
-	return a.AccessSecret
+// AccessSecret Getter
+func (c *Config) GetAccessSecret() []byte {
+	return c.AccessSecret
 }
 
 func NewJWTCustomClaims(userID, email string, TTL time.Duration) *JWTCustomClaims {
@@ -97,7 +97,7 @@ func (c *Controller) GenerateRefreshToken(userID, email string) (string, error) 
 
 func ValidateToken(tokenStr string, secret []byte) (*JWTCustomClaims, error) {
   	token, err := jwt.ParseWithClaims(tokenStr, 
-		&JWTCustomClaims{}, func(t *jwt.Token) (interface{}, error) {
+		&JWTCustomClaims{}, func(t *jwt.Token) (any, error) {
     		if t.Method != jwt.SigningMethodHS256 {
       			return nil, errors.New("unexpected signing method")
     		}
@@ -107,7 +107,7 @@ func ValidateToken(tokenStr string, secret []byte) (*JWTCustomClaims, error) {
 	)
 
   	if err != nil || !token.Valid {
-    	return nil, errors.New("invalid token" + err.Error() + token.Raw)
+    	return nil, err
   	}
   	
 	claims, ok := token.Claims.(*JWTCustomClaims)

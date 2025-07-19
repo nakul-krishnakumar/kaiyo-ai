@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type AuthConfig struct {
+type Config struct {
 	AccessSecret  []byte
 	RefreshSecret []byte
 	AccessTTL     time.Duration
@@ -14,7 +14,7 @@ type AuthConfig struct {
 }
 
 type Controller struct {
-	auth *AuthConfig
+	auth *Config
 }
 
 type JWTCustomClaims struct {
@@ -29,6 +29,6 @@ type UserReq struct {
 	Password string
 }
 
-type AuthHandler struct {
+type Handler struct {
 	Controller *Controller
 }

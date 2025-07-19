@@ -48,7 +48,7 @@ func main() {
 
 	server := http.Server{
 		Addr: addr,
-		Handler: mainMux,
+		Handler: mw.CORS(mainMux),
 	}
 
 	slog.Info("Server listening on http://" + addr)
