@@ -11,20 +11,28 @@ import (
 	"time"
 
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/config"
+	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/auth"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/chat"
+	mw "github.com/nakul-krishnakumar/kaiyo-ai/internal/middlewares"
 )
 
 func main() {
-	// load config
+	// load configs
 	cfg := config.MustLoad()
+	authConfig := auth.MustLoad()
+
+	// middlewares
+	Authenticate := mw.Auth(authConfig)
 
 	// http mux constructor
 	mainMux := http.NewServeMux()
 
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/chats/", http.StripPrefix("/chats", chat.New())) // /api/v1/chats
+	
+	mainMux.Handle("/api/v1/", Authenticate(http.StripPrefix("/api/v1", apiMux))) // /api/v1/
+	mainMux.Handle("/auth/", http.StripPrefix("/auth", auth.New(authConfig)))   // /auth
 
-	mainMux.Handle("/api/v1/", http.StripPrefix("/api/v1", apiMux)) // /api/v1/
 
 	// default endpoint - {$} makes it very specific
 	mainMux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +48,7 @@ func main() {
 
 	server := http.Server{
 		Addr: addr,
-		Handler: mainMux,
+		Handler: mw.CORS(mainMux),
 	}
 
 	slog.Info("Server listening on http://" + addr)

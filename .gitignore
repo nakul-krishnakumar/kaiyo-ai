@@ -26,6 +26,7 @@ go.work.sum
 
 # env file
 .env
+private/
 
 # Editor/IDE
 # .idea/
@@ -33,3 +34,5 @@ go.work.sum
 
 # air builds
 tmp/
+
+ui/
