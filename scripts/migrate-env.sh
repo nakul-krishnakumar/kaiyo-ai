@@ -4,8 +4,11 @@
 
 echo "Setting up the environment for goose database migration"
 
-echo "Enter database driver to use (e.g., mysql, postgres): "
+echo "Enter database driver to use (default: postgres): "
 read -r DB_DRIVER
+if [ -z "$DB_DRIVER" ]; then
+    DB_DRIVER="postgres"
+fi
 export GOOSE_DRIVER=$DB_DRIVER
 
 echo "Enter database connection string (e.g., user:password@tcp(localhost:3306)/dbname): "

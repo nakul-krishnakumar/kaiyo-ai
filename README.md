@@ -6,4 +6,4 @@
     go install github.com/pressly/goose/v3/cmd/goose@latest
     ```
 
-- Run ```source ./migrate-env.sh``` for setting up goose environment variables.
+- Run ```source ./scripts/migrate-env.sh``` for setting up goose environment variables.

@@ -39,7 +39,10 @@ func (h *Handler) setRefreshTokenCookie(w http.ResponseWriter, refresh string) {
 func (h *Handler) EmailLoginHandler(w http.ResponseWriter, r *http.Request) {
 
   	var req struct{ Email, Password string }
-  	json.NewDecoder(r.Body).Decode(&req)
+  	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	
 	//user := db.VerifyUser(req.Email, req.Password) // your user lookup
 	user := struct{ ID, email string }{
 		ID: "1",

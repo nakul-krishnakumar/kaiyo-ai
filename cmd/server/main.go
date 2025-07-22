@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/config"
+	"github.com/nakul-krishnakumar/kaiyo-ai/internal/database"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/auth"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/chat"
 	mw "github.com/nakul-krishnakumar/kaiyo-ai/internal/middlewares"
@@ -20,9 +21,29 @@ func main() {
 	// load configs
 	cfg := config.MustLoad()
 	authConfig := auth.MustLoad()
+	dbConfig := database.MustLoad()
 
 	// middlewares
 	Authenticate := mw.Auth(authConfig)
+
+	// database connection
+	db, err := database.New(dbConfig)
+	if err != nil {
+		slog.Error("Could not connect to database", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	// db health check
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    if err := db.Health(ctx); err != nil {
+        cancel()
+        slog.Error("Database health check failed", slog.String("error", err.Error()))
+        os.Exit(1)
+    }
+    cancel()
+	slog.Info("Connect to database successfully")
+
 
 	// http mux constructor
 	mainMux := http.NewServeMux()
@@ -72,7 +93,7 @@ func main() {
 
 	slog.Info("Shutting down the server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
@@ -80,5 +101,4 @@ func main() {
 	}
 
 	slog.Info("Server shutdown successfully")
-
 }
