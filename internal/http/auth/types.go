@@ -25,7 +25,7 @@ type JWTCustomClaims struct {
 
 type UserReq struct {
 	UserName string
-	Email string
+	Email    string
 	Password string
 }
 

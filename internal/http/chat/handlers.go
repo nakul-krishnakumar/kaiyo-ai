@@ -7,7 +7,7 @@ import (
 )
 
 func NewHandler(ctrl *Controller) *ChatHandler {
-	return &ChatHandler{ Controller: ctrl }
+	return &ChatHandler{Controller: ctrl}
 }
 
 // POST api/v1/chats/
@@ -19,13 +19,13 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Immediate streaming without waiting for the entire response
-	flusher, ok := w.(http.Flusher); 
+	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
 		return
 	}
 
-	userInput :=  UserInput{}
+	userInput := UserInput{}
 	if err := json.NewDecoder(r.Body).Decode(&userInput); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -34,10 +34,10 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 	if userInput.Content == "" {
 		http.Error(w, "content is missing", http.StatusBadRequest)
 		return
-	} 
+	}
 
 	go func() {
-		done <- h.Controller.StreamMessage(ctx, userInput, chunkCh)	
+		done <- h.Controller.StreamMessage(ctx, userInput, chunkCh)
 	}()
 
 	// listen to both done and chunkCh channels at the same time
@@ -45,7 +45,7 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 		select { // listen from the channel which gives output first
 		case <-ctx.Done():
 			return
-	
+
 		case err := <-done:
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,18 +53,20 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case chunk, ok := <-chunkCh:
-			if !ok { return }
+			if !ok {
+				return
+			}
 			fmt.Fprintf(w, "data: %s\n\n", chunk) // buffer
-			flusher.Flush() // returns the buffer
+			flusher.Flush()                       // returns the buffer
 
 			fmt.Print(chunk)
 		}
-  	}
+	}
 }
 
 func (h *ChatHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	chatID := r.PathValue("chatID")
-	
+
 	if chatID == "" {
 		http.Error(w, "parameter chatID is missing", http.StatusBadRequest)
 		return

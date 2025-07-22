@@ -7,14 +7,14 @@ import (
 )
 
 type Model struct {
-	Name string `mapstructure:"model_name"`
-	Type string `mapstructure:"model_type"`
+	Name         string `mapstructure:"model_name"`
+	Type         string `mapstructure:"model_type"`
 	SystemPrompt string `mapstructure:"system_prompt"`
 }
 
 type Message struct {
-	Role string
-	Content string
+	Role      string
+	Content   string
 	CreatedAt time.Time
 }
 
@@ -29,7 +29,7 @@ type ChatHandler struct {
 }
 
 type UserInput struct {
-	ChatID string
-	UserID string
+	ChatID  string
+	UserID  string
 	Content string
 }

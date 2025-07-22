@@ -11,18 +11,18 @@ import (
 )
 
 type Config struct {
-	URL string
-	Pool PoolConfig
+	URL  string     
+	Pool PoolConfig 
 }
 
 type PoolConfig struct {
-	URL         string                                                
-	MinConns    int32         `mapstructure:"min_conns"`         
-	MaxConns    int32         `mapstructure:"max_conns"`         
-	MaxConnLife time.Duration `mapstructure:"max_conn_life"` 
-	MaxConnIdle time.Duration `mapstructure:"max_conn_idle"` 
+	URL         string
+	MinConns    int32         `mapstructure:"min_conns"`
+	MaxConns    int32         `mapstructure:"max_conns"`
+	MaxConnLife time.Duration `mapstructure:"max_conn_life"`
+	MaxConnIdle time.Duration `mapstructure:"max_conn_idle"`
 
-	/* 
+	/*
 		URL -- connection string
 		MinConns -- min simultaneous conns
 		MaxConns -- max simultaneous conns
@@ -32,8 +32,8 @@ type PoolConfig struct {
 }
 
 type TimeoutConfig struct {
-    Connect time.Duration `mapstructure:"connect"`
-    Query   time.Duration `mapstructure:"query"`
+	Connect time.Duration `mapstructure:"connect"`
+	Query   time.Duration `mapstructure:"query"`
 }
 
 func MustLoad() *Config {

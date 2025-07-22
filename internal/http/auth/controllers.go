@@ -15,12 +15,12 @@ import (
 )
 
 func NewController(config *Config) *Controller {
-	return &Controller{ config }
+	return &Controller{config}
 }
 
 func MustLoad() *Config {
 	if err := godotenv.Load(); err != nil {
-		slog.Error("Error loading authentication secrets" + err.Error())	
+		slog.Error("Error loading authentication secrets" + err.Error())
 	}
 
 	accessSecret := []byte(os.Getenv("JWT_ACCESS_SECRET"))
@@ -46,10 +46,10 @@ func MustLoad() *Config {
 	}
 
 	return &Config{
-		AccessSecret: accessSecret,
+		AccessSecret:  accessSecret,
 		RefreshSecret: refreshSecret,
-		AccessTTL: accessTTL,
-		RefreshTTL: refreshTTL,
+		AccessTTL:     accessTTL,
+		RefreshTTL:    refreshTTL,
 	}
 }
 
@@ -61,7 +61,7 @@ func (c *Config) GetAccessSecret() []byte {
 func NewJWTCustomClaims(userID, email string, TTL time.Duration) *JWTCustomClaims {
 	return &JWTCustomClaims{
 		UserID: userID,
-		Email: email,
+		Email:  email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(TTL)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -96,20 +96,20 @@ func (c *Controller) GenerateRefreshToken(userID, email string) (string, error) 
 }
 
 func ValidateToken(tokenStr string, secret []byte) (*JWTCustomClaims, error) {
-  	token, err := jwt.ParseWithClaims(tokenStr, 
+	token, err := jwt.ParseWithClaims(tokenStr,
 		&JWTCustomClaims{}, func(t *jwt.Token) (any, error) {
-    		if t.Method != jwt.SigningMethodHS256 {
-      			return nil, errors.New("unexpected signing method")
-    		}
+			if t.Method != jwt.SigningMethodHS256 {
+				return nil, errors.New("unexpected signing method")
+			}
 
-    		return secret, nil
+			return secret, nil
 		},
 	)
 
-  	if err != nil || !token.Valid {
-    	return nil, err
-  	}
-  	
+	if err != nil || !token.Valid {
+		return nil, err
+	}
+
 	claims, ok := token.Claims.(*JWTCustomClaims)
 	if !ok {
 		return nil, errors.New("invalid token claims")
