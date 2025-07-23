@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -24,7 +24,7 @@ func main() {
 	dbConfig := database.MustLoad()
 
 	// middlewares
-	Authenticate := mw.Auth(authConfig)
+	authenticate := mw.Auth(authConfig)
 
 	// database connection
 	db, err := database.New(dbConfig)
@@ -50,7 +50,7 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/chats/", http.StripPrefix("/chats", chat.New())) // /api/v1/chats
 
-	mainMux.Handle("/api/v1/", Authenticate(http.StripPrefix("/api/v1", apiMux))) // /api/v1/
+	mainMux.Handle("/api/v1/", authenticate(http.StripPrefix("/api/v1", apiMux))) // /api/v1/
 	mainMux.Handle("/auth/", http.StripPrefix("/auth", auth.New(authConfig)))     // /auth
 
 	// default endpoint - {$} makes it very specific
@@ -63,8 +63,7 @@ func main() {
 		}
 	})
 
-	addr := strings.Join([]string{cfg.Host, cfg.Port}, ":")
-
+	addr := net.JoinHostPort(cfg.Host, cfg.Port)
 	server := http.Server{
 		Addr:    addr,
 		Handler: mw.CORS(mainMux),
