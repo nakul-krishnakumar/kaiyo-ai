@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/auth"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/http/chat"
 	mw "github.com/nakul-krishnakumar/kaiyo-ai/internal/middlewares"
+	"github.com/nakul-krishnakumar/kaiyo-ai/internal/repositories"
 )
 
 func main() {
@@ -44,6 +46,9 @@ func main() {
 	cancel()
 	slog.Info("Connect to database successfully")
 
+	// If connected to db, initialise repositories with the database pool
+	repo := repositories.NewRepositories(db.Pool)
+
 	// http mux constructor
 	mainMux := http.NewServeMux()
 
@@ -51,12 +56,15 @@ func main() {
 	apiMux.Handle("/chats/", http.StripPrefix("/chats", chat.New())) // /api/v1/chats
 
 	mainMux.Handle("/api/v1/", authenticate(http.StripPrefix("/api/v1", apiMux))) // /api/v1/
-	mainMux.Handle("/auth/", http.StripPrefix("/auth", auth.New(authConfig)))     // /auth
+	mainMux.Handle("/auth/", http.StripPrefix("/auth", auth.New(authConfig, repo)))     // /auth
 
 	// default endpoint - {$} makes it very specific
 	mainMux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte("Welcome to Kaiyo AI!"))
+		err := json.NewEncoder(w).Encode(map[string]string{
+			"message": "Welcome to Kaiyo AI",
+		})
 
 		if err != nil {
 			slog.Error("Could not write response", slog.String("error", err.Error()))

@@ -181,3 +181,26 @@ func (r *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }
+
+func (r *UserRepo) VerifyUser(ctx context.Context, email, password string) (*models.User, error) {
+	query := `
+	SELECT id, email, password, name, google_id, twitter_id,
+			email_verified, is_active, created_at, updated_at, last_login_at
+	FROM users WHERE email = $1 AND password = $2`
+
+	user := &models.User{}
+		err := r.pool.QueryRow(ctx, query, email).Scan(
+		&user.ID, &user.Email, &user.Password, &user.Name,
+		&user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
+		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
+	)
+
+	if err == pgx.ErrNoRows {
+		return nil, fmt.Errorf("user not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return user, nil
+}

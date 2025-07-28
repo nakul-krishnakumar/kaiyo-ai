@@ -2,13 +2,16 @@
 -- +goose StatementBegin
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    name VARCHAR(255),
-    
+    email VARCHAR(254) UNIQUE NOT NULL,
+
+    password VARCHAR(60) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    username VARCHAR(30) UNIQUE NOT NULL,
+
     -- OAuth fields
-    google_id VARCHAR(255) UNIQUE,
-    twitter_id VARCHAR(255) UNIQUE,
+    google_id VARCHAR(21) UNIQUE,
+    twitter_id VARCHAR(20) UNIQUE,
     
     -- Account status
     email_verified BOOLEAN DEFAULT FALSE,

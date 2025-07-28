@@ -24,7 +24,7 @@ type Controller struct {
 	History []openai.ChatCompletionMessageParamUnion // context memory to store messages
 }
 
-type ChatHandler struct {
+type Handler struct {
 	Controller *Controller
 }
 

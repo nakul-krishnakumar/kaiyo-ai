@@ -6,12 +6,12 @@ import (
 	"net/http"
 )
 
-func NewHandler(ctrl *Controller) *ChatHandler {
-	return &ChatHandler{Controller: ctrl}
+func NewHandler(ctrl *Controller) *Handler {
+	return &Handler{Controller: ctrl}
 }
 
 // POST api/v1/chats/
-func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PostChat(w http.ResponseWriter, r *http.Request) {
 
 	chunkCh := make(chan string)
 	done := make(chan error, 1)
@@ -64,7 +64,7 @@ func (h *ChatHandler) PostChat(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *ChatHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	chatID := r.PathValue("chatID")
 
 	if chatID == "" {

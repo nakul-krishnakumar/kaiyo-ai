@@ -15,7 +15,9 @@ import (
 )
 
 func NewController(config *Config) *Controller {
-	return &Controller{config}
+	return &Controller{
+		config,
+	}
 }
 
 func MustLoad() *Config {
@@ -58,7 +60,7 @@ func (c *Config) GetAccessSecret() []byte {
 	return c.AccessSecret
 }
 
-func NewJWTCustomClaims(userID, email string, TTL time.Duration) *JWTCustomClaims {
+func NewJWTCustomClaims(userID uuid.UUID, email string, TTL time.Duration) *JWTCustomClaims {
 	return &JWTCustomClaims{
 		UserID: userID,
 		Email:  email,
@@ -69,7 +71,7 @@ func NewJWTCustomClaims(userID, email string, TTL time.Duration) *JWTCustomClaim
 	}
 }
 
-func (c *Controller) GenerateAccessToken(userID, email string) (string, error) {
+func (c *Controller) GenerateAccessToken(userID uuid.UUID, email string) (string, error) {
 	claims := NewJWTCustomClaims(userID, email, c.auth.AccessTTL)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
@@ -81,7 +83,7 @@ func (c *Controller) GenerateAccessToken(userID, email string) (string, error) {
 	return ss, nil
 }
 
-func (c *Controller) GenerateRefreshToken(userID, email string) (string, error) {
+func (c *Controller) GenerateRefreshToken(userID uuid.UUID, email string) (string, error) {
 	claims := NewJWTCustomClaims(userID, email, c.auth.RefreshTTL)
 	claims.ID = uuid.NewString()
 
