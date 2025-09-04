@@ -11,20 +11,20 @@ import (
 )
 
 type HTTPServer struct {
-	Host string 
-	Port string	
+	Host string
+	Port string
 }
 
 type Config struct {
-	Env string `mapstructure:"env"`
+	Env        string `mapstructure:"env"`
 	HTTPServer `mapstructure:"http_server"`
 }
 
 func MustLoad() *Config {
 	// load env files
 	if err := godotenv.Load(); err != nil {
-        slog.Warn("No .env file found or error loading it", slog.String("error", err.Error()))
-    }
+		slog.Warn("No .env file found or error loading it", slog.String("error", err.Error()))
+	}
 
 	configPath := os.Getenv("DEV_CONFIG_PATH")
 

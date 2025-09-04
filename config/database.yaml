@@ -1,0 +1,9 @@
+pool:
+    min_conns: 2
+    max_conns: 25
+    max_conn_life: "1h"
+    max_conn_idle: "30m"
+
+timeouts:
+    connect: "5s"
+    query: "30s"

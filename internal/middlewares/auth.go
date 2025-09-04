@@ -19,7 +19,7 @@ func Auth(config *auth.Config) func(http.Handler) http.Handler {
 			if token == "" {
 				w.WriteHeader(http.StatusUnauthorized)
 				json.NewEncoder(w).Encode(map[string]string{
-					"error" : "missing authorization header",
+					"error": "missing authorization header",
 				})
 				return
 			}
@@ -28,12 +28,12 @@ func Auth(config *auth.Config) func(http.Handler) http.Handler {
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				json.NewEncoder(w).Encode(map[string]string{
-					"message" : "invalid token",
-					"error" : err.Error(),
+					"message": "invalid token",
+					"error":   err.Error(),
 				})
 				return
 			}
-			
+
 			ctx := context.WithValue(r.Context(), contextKey("userID"), claims.UserID)
 			ctx = context.WithValue(ctx, contextKey("subject"), claims.Subject)
 			next.ServeHTTP(w, r.WithContext(ctx))

@@ -60,15 +60,15 @@ func NewController() *Controller {
 	})
 
 	return &Controller{
-		Client: client,
+		Client:  client,
 		History: msgs,
-		Model: model,
+		Model:   model,
 	}
 }
 
 func (c *Controller) StreamMessage(
-	ctx context.Context, 
-	userInput UserInput, 
+	ctx context.Context,
+	userInput UserInput,
 	chunkCh chan<- string,
 ) error {
 
@@ -84,7 +84,7 @@ func (c *Controller) StreamMessage(
 	})
 
 	stream := c.Client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
-		Model: openai.ChatModel(c.Model.Name),
+		Model:    openai.ChatModel(c.Model.Name),
 		Messages: c.History,
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),
@@ -95,8 +95,8 @@ func (c *Controller) StreamMessage(
 	var tokenBuilder strings.Builder
 
 	for stream.Next() { // returns false when stream ends
-        chunk := stream.Current()
-        acc.AddChunk(chunk)
+		chunk := stream.Current()
+		acc.AddChunk(chunk)
 
 		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
 			delta := chunk.Choices[0].Delta.Content
@@ -104,32 +104,32 @@ func (c *Controller) StreamMessage(
 			chunkCh <- delta // add the response chunk to channel
 		}
 
-        // if _, ok := acc.JustFinishedToolCall(); ok {
-        //     // Extract and invoke tool function.
-        //     // Then feed the result back by calling the LLM again
-        // }
-    }
+		// if _, ok := acc.JustFinishedToolCall(); ok {
+		//     // Extract and invoke tool function.
+		//     // Then feed the result back by calling the LLM again
+		// }
+	}
 
-    if err := stream.Err(); err != nil {
-        return fmt.Errorf("chat streaming error: %w", err)
-    }
+	if err := stream.Err(); err != nil {
+		return fmt.Errorf("chat streaming error: %w", err)
+	}
 
-    finalContent := tokenBuilder.String()
+	finalContent := tokenBuilder.String()
 
-    // Add assistant response to History
-    c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
-        OfAssistant: &openai.ChatCompletionAssistantMessageParam{
-            Content: openai.ChatCompletionAssistantMessageParamContentUnion{
-                OfString: openai.String(finalContent),
-            },
-        },
-    })
+	// Add assistant response to History
+	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+		OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+			Content: openai.ChatCompletionAssistantMessageParamContentUnion{
+				OfString: openai.String(finalContent),
+			},
+		},
+	})
 
 	return nil
 }
 
 func (c *Controller) GetHistory(chatID string) ([]openai.ChatCompletionMessageParamUnion, error) {
-	// instead of keeping history as chatcompletion obj, 
+	// instead of keeping history as chatcompletion obj,
 	// keep it as a []Message object
 	// then write a function to convert []Message to chatcompletion
 	// this should run once at the beginning of the chat session

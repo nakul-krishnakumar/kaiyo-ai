@@ -2,11 +2,14 @@ package auth
 
 import (
 	"net/http"
+
+	"github.com/nakul-krishnakumar/kaiyo-ai/internal/repositories"
 )
 
-func New(config *Config) *http.ServeMux {
+func New(config *Config, repo *repositories.Repositories) *http.ServeMux {
 	ctrl := NewController(config)
-	h := NewHandler(ctrl)
+	val := NewValidator()
+	h := NewHandler(ctrl, repo, val)
 	mux := http.NewServeMux()
 
 	dummy := func(w http.ResponseWriter, r *http.Request) {
@@ -14,6 +17,7 @@ func New(config *Config) *http.ServeMux {
 	}
 
 	mux.HandleFunc("POST /login", h.EmailLoginHandler)
+	mux.HandleFunc("POST /signin", h.EmailSignInHandler)
 	mux.HandleFunc("GET /logout", h.EmailLogoutHandler)
 	mux.HandleFunc("GET /refresh", h.EmailRefreshHandler)
 
