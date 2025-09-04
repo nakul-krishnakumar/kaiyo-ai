@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,22 +20,22 @@ func NewUserRepo(pool *pgxpool.Pool) *UserRepo {
 	return &UserRepo{pool: pool}
 }
 
-// Create implements repositories.UserRepository
+// Create a new User with details
 func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
 	query := `
-        INSERT INTO users (id, email, password, name, google_id, twitter_id, 
-                          email_verified, is_active, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+        INSERT INTO users 
+		(id, email, password, first_name, last_name, username, google_id, twitter_id, email_verified, is_active, created_at, updated_at, last_login_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 	now := time.Now()
-	user.ID = uuid.New()
 	user.CreatedAt = now
 	user.UpdatedAt = now
+	user.LastLoginAt = now
 
 	_, err := r.pool.Exec(ctx, query,
-		user.ID, user.Email, user.Password, user.Name,
-		user.GoogleID, user.TwitterID, user.EmailVerified, user.IsActive,
-		user.CreatedAt, user.UpdatedAt,
+		user.ID, user.Email, user.Password, user.FirstName, user.LastName,
+		user.UserName, user.GoogleID, user.TwitterID, user.EmailVerified, user.IsActive,
+		user.CreatedAt, user.UpdatedAt, user.LastLoginAt,
 	)
 
 	if err != nil {
@@ -44,41 +45,29 @@ func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-// GetByID implements repositories.UserRepository
-func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
-	query := `
-        SELECT id, email, password, name, google_id, twitter_id,
-               email_verified, is_active, created_at, updated_at, last_login_at
-        FROM users WHERE id = $1 AND is_active = true`
+// Check if user with the passed email exists
+func (r *UserRepo) Exists(ctx context.Context, email string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
 
-	user := &models.User{}
-	err := r.pool.QueryRow(ctx, query, id).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Name,
-		&user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
-	)
-
-	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("user not found")
-	}
+	var exists bool
+	err := r.pool.QueryRow(ctx, query, email).Scan(&exists)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
+		return false, fmt.Errorf("failed to check user existence: %w", err)
 	}
 
-	return user, nil
+	return exists, nil
 }
 
 // GetByEmail implements repositories.UserRepository
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `
-        SELECT id, email, password, name, google_id, twitter_id,
+        SELECT id, email, password, first_name, last_name, user_name, google_id, twitter_id,
                email_verified, is_active, created_at, updated_at, last_login_at
         FROM users WHERE email = $1 AND is_active = true`
 
 	user := &models.User{}
 	err := r.pool.QueryRow(ctx, query, email).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Name,
-		&user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
+		&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.UserName, &user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
 		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
 	)
 
@@ -92,115 +81,71 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 	return user, nil
 }
 
-// GetByGoogleID implements repositories.UserRepository
-func (r *UserRepo) GetByGoogleID(ctx context.Context, googleId string) (*models.User, error) {
+func (r *UserRepo) UpdateLastLogin(ctx context.Context, userID uuid.UUID) error {
 	query := `
-        SELECT id, email, password, name, google_id, twitter_id,
-               email_verified, is_active, created_at, updated_at, last_login_at
-        FROM users WHERE google_id = $1 AND is_active = true`
+	UPDATE TABLE user 
+	SET last_login_at = NOW()
+	WHERE id = $1`
 
-	user := &models.User{}
-	err := r.pool.QueryRow(ctx, query, googleId).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Name,
-		&user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
-	)
-
-	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("user not found")
-	}
+	_, err := r.pool.Exec(ctx, query, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-
-	return user, nil
-}
-
-// GetByTwitterID implements repositories.UserRepository
-func (r *UserRepo) GetByTwitterID(ctx context.Context, twitterId string) (*models.User, error) {
-	query := `
-        SELECT id, email, password, name, google_id, twitter_id,
-               email_verified, is_active, created_at, updated_at, last_login_at
-        FROM users WHERE twitter_id = $1 AND is_active = true`
-
-	user := &models.User{}
-	err := r.pool.QueryRow(ctx, query, twitterId).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Name,
-		&user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
-	)
-
-	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("user not found")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-
-	return user, nil
-}
-
-// Update implements repositories.UserRepository
-func (r *UserRepo) Update(ctx context.Context, user *models.User) error {
-	query := `
-        UPDATE users 
-        SET email = $2, name = $3, google_id = $4, twitter_id = $5,
-            email_verified = $6, updated_at = $7
-        WHERE id = $1 AND is_active = true`
-
-	user.UpdatedAt = time.Now()
-
-	result, err := r.pool.Exec(ctx, query,
-		user.ID, user.Email, user.Name, user.GoogleID, user.TwitterID,
-		user.EmailVerified, user.UpdatedAt,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to update user: %w", err)
-	}
-
-	if result.RowsAffected() == 0 {
-		return fmt.Errorf("user not found")
+		return fmt.Errorf("failed to update last login: %w", err)
 	}
 
 	return nil
 }
 
-// Delete implements repositories.UserRepository
-func (r *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
-	// Soft delete by setting is_active to false
-	query := `UPDATE users SET is_active = false, updated_at = $2 WHERE id = $1 AND is_active = true`
+func (r *UserRepo) UpdateLastLoginAsync(userID uuid.UUID, email string) {
+	go func() {
+		// Panic recovery for goroutine safety
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("Panic in UpdateLastLoginAsync",
+					slog.Any("panic", r),
+					slog.String("user_id", userID.String()))
+			}
+		}()
 
-	result, err := r.pool.Exec(ctx, query, id, time.Now())
-	if err != nil {
-		return fmt.Errorf("failed to delete user: %w", err)
-	}
+		// Create background context with timeout
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-	if result.RowsAffected() == 0 {
-		return fmt.Errorf("user not found")
-	}
+		// Retry logic with exponential backoff
+		maxRetries := 3
+		for attempt := 1; attempt <= maxRetries; attempt++ {
+			if err := r.UpdateLastLogin(ctx, userID); err != nil {
+				slog.Error("Failed to update last login",
+					slog.String("error", err.Error()),
+					slog.String("user_id", userID.String()),
+					slog.String("email", email),
+					slog.Int("attempt", attempt))
 
-	return nil
-}
+				if attempt < maxRetries {
+					// Exponential backoff: 1s, 4s, 9s
+					backoff := time.Duration(attempt*attempt) * time.Second
 
-func (r *UserRepo) VerifyUser(ctx context.Context, email, password string) (*models.User, error) {
-	query := `
-	SELECT id, email, password, name, google_id, twitter_id,
-			email_verified, is_active, created_at, updated_at, last_login_at
-	FROM users WHERE email = $1 AND password = $2`
+					select {
+					case <-time.After(backoff):
+						continue
+					case <-ctx.Done():
+						slog.Error("Context cancelled during retry backoff",
+							slog.String("user_id", userID.String()))
+						return
+					}
+				}
 
-	user := &models.User{}
-		err := r.pool.QueryRow(ctx, query, email).Scan(
-		&user.ID, &user.Email, &user.Password, &user.Name,
-		&user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
-	)
+				// All retries failed
+				slog.Error("All retries failed for last login update",
+					slog.String("user_id", userID.String()),
+					slog.String("email", email))
+				return
+			}
 
-	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("user not found")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-
-	return user, nil
+			// Success - log and exit
+			slog.Debug("Last login updated successfully",
+				slog.String("user_id", userID.String()),
+				slog.Int("attempt", attempt))
+			return
+		}
+	}()
 }

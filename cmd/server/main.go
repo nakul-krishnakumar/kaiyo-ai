@@ -55,8 +55,8 @@ func main() {
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/chats/", http.StripPrefix("/chats", chat.New())) // /api/v1/chats
 
-	mainMux.Handle("/api/v1/", authenticate(http.StripPrefix("/api/v1", apiMux))) // /api/v1/
-	mainMux.Handle("/auth/", http.StripPrefix("/auth", auth.New(authConfig, repo)))     // /auth
+	mainMux.Handle("/api/v1/", authenticate(http.StripPrefix("/api/v1", apiMux)))   // /api/v1/
+	mainMux.Handle("/auth/", http.StripPrefix("/auth", auth.New(authConfig, repo))) // /auth
 
 	// default endpoint - {$} makes it very specific
 	mainMux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {

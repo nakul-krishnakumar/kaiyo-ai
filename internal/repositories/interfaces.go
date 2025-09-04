@@ -9,16 +9,22 @@ import (
 
 // UserRepository defines user data operations
 type UserRepository interface {
-    Create(ctx context.Context, user *models.User) error
-    GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
-    GetByGoogleID(ctx context.Context, googleId string) (*models.User, error)
-    GetByTwitterID(ctx context.Context, twitterId string) (*models.User, error)
-    GetByEmail(ctx context.Context, email string) (*models.User, error)
-    Update(ctx context.Context, user *models.User) error
-    Delete(ctx context.Context, id uuid.UUID) error
+	Create(ctx context.Context, user *models.User) error
+	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	Exists(ctx context.Context, email string) (bool, error)
+	UpdateLastLogin(ctx context.Context, userID uuid.UUID) error
+	UpdateLastLoginAsync(userID uuid.UUID, email string)
+}
+
+type SessionRepository interface {
+	Create(ctx context.Context, session *models.Session) error
+	GetByToken(ctx context.Context, refreshToken string) (*models.Session, error)
+	RevokeSessionByToken(ctx context.Context, refreshToken string) error
+	RevokeSessionByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
 // Repositories aggregates all repositories
 type Repositories struct {
-    User UserRepository
+	User UserRepository
+	Session SessionRepository
 }

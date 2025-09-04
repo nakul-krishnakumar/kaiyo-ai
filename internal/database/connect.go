@@ -39,50 +39,50 @@ func New(cfg *Config) (*Database, error) {
 
 // Close closes the database connection pool
 func (db *Database) Close() {
-    if db.Pool != nil {
-        slog.Info("Closing database connection pool")
-        db.Pool.Close()
-    }
+	if db.Pool != nil {
+		slog.Info("Closing database connection pool")
+		db.Pool.Close()
+	}
 }
 
 // Health checks the database connection
 func (db *Database) Health(ctx context.Context) error {
-    return db.Pool.Ping(ctx)
+	return db.Pool.Ping(ctx)
 }
 
 // Stats returns connection pool statistics
 func (db *Database) Stats() *pgxpool.Stat {
-    return db.Pool.Stat()
+	return db.Pool.Stat()
 }
 
 // WithTx executes a function within a database transaction
 func (db *Database) WithTx(ctx context.Context, fn func(tx pgx.Tx) error) error {
-    tx, err := db.Pool.Begin(ctx)
-    if err != nil {
-        return fmt.Errorf("failed to begin transaction: %w", err)
-    }
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
 
-    defer func() {
-        if err != nil {
-            if rbErr := tx.Rollback(ctx); rbErr != nil {
-                slog.Error("Failed to rollback transaction", slog.String("error", rbErr.Error()))
-            }
-        }
-    }()
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				slog.Error("Failed to rollback transaction", slog.String("error", rbErr.Error()))
+			}
+		}
+	}()
 
-    if err = fn(tx); err != nil {
-        return err
-    }
+	if err = fn(tx); err != nil {
+		return err
+	}
 
-    if err = tx.Commit(ctx); err != nil {
-        return fmt.Errorf("failed to commit transaction: %w", err)
-    }
+	if err = tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 //TODO:
-/* 
+/*
 	- Setup db repositories
 	- db health check api endpoint
 	- db health check cron

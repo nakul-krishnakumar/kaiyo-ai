@@ -11,8 +11,8 @@ import (
 )
 
 type Config struct {
-	URL  string     
-	Pool PoolConfig 
+	URL  string
+	Pool PoolConfig
 }
 
 type PoolConfig struct {

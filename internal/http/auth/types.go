@@ -21,7 +21,7 @@ type Controller struct {
 
 type JWTCustomClaims struct {
 	UserID uuid.UUID `json:"userID"`
-	Email  string `json:"email"`
+	Email  string    `json:"email"`
 	jwt.RegisteredClaims
 }
 
@@ -33,13 +33,14 @@ type UserReq struct {
 
 type Handler struct {
 	Controller *Controller
-	Repo *repositories.Repositories
-	Validator Validator
+	Repo       *repositories.Repositories
+	Validator  Validator
 }
 
 type SignInRequest struct {
 	FirstName string `json:"firstName" mapstructure:"first_name"`
 	LastName  string `json:"lastName" mapstructure:"last_name"`
+	UserName  string `json:"userName" mapstructure:"user_name"`
 	Email     string `json:"email" mapstructure:"email"`
 	Password  string `json:"password" mapstructure:"password"`
 }
@@ -50,8 +51,8 @@ type LogInRequest struct {
 }
 
 type Validator interface {
-    ValidateSignInRequest(req SignInRequest) ValidationErrors
-    ValidateLoginRequest(req LogInRequest) ValidationErrors
+	ValidateSignInRequest(req SignInRequest) ValidationErrors
+	ValidateLoginRequest(req LogInRequest) ValidationErrors
 }
 
 // ValidationErrors type for structured error handling
