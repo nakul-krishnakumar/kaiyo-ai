@@ -1,11 +1,11 @@
 pre-commit:
-    jobs:
-        - name: lint frontend
-          run: npm run lint
+  jobs:
+    - name: lint frontend
+      run: npm run lint
 
-        - name: format
-          run: npm run format
+    - name: format
+      run: npm run format
 pre-push:
-    jobs:
-        - name: build frontend
-          run: npm run build
+  jobs:
+    - name: build frontend
+      run: npm run build

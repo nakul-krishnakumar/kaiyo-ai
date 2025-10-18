@@ -2,7 +2,9 @@
   "name": "kaiyo-ai-monorepo",
   "private": true,
   "version": "0.0.0",
-  "workspaces": ["client"],
+  "workspaces": [
+    "client"
+  ],
   "devDependencies": {
     "lefthook": "^1.6.10"
   },

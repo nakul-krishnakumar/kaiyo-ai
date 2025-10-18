@@ -1,91 +1,103 @@
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageSquare, PenTool, TrendingUp, Heart, MessageCircle, Eye, Plus } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  MessageSquare,
+  PenTool,
+  TrendingUp,
+  Heart,
+  MessageCircle,
+  Eye,
+  Plus,
+} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const CommunityPage = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
   const questions = [
-    { 
-      title: 'Best time to visit Japan for cherry blossoms?', 
-      author: 'Sarah M.', 
-      replies: 23, 
+    {
+      title: "Best time to visit Japan for cherry blossoms?",
+      author: "Sarah M.",
+      replies: 23,
       views: 456,
       likes: 12,
-      tags: ['Japan', 'Spring', 'Nature']
+      tags: ["Japan", "Spring", "Nature"],
     },
-    { 
-      title: 'Budget-friendly hotels in Paris?', 
-      author: 'John D.', 
-      replies: 18, 
+    {
+      title: "Budget-friendly hotels in Paris?",
+      author: "John D.",
+      replies: 18,
       views: 342,
       likes: 8,
-      tags: ['Paris', 'Budget', 'Hotels']
+      tags: ["Paris", "Budget", "Hotels"],
     },
-    { 
-      title: 'Safety tips for solo female travelers in Bali', 
-      author: 'Maria L.', 
-      replies: 31, 
+    {
+      title: "Safety tips for solo female travelers in Bali",
+      author: "Maria L.",
+      replies: 31,
       views: 678,
       likes: 45,
-      tags: ['Bali', 'Safety', 'Solo Travel']
+      tags: ["Bali", "Safety", "Solo Travel"],
     },
-    { 
-      title: 'Visa requirements for traveling to Thailand', 
-      author: 'Alex K.', 
-      replies: 15, 
+    {
+      title: "Visa requirements for traveling to Thailand",
+      author: "Alex K.",
+      replies: 15,
       views: 290,
       likes: 6,
-      tags: ['Thailand', 'Visa', 'Documentation']
+      tags: ["Thailand", "Visa", "Documentation"],
     },
   ];
 
   const blogs = [
-    { 
-      title: '10 Hidden Gems in Southeast Asia', 
-      author: 'Travel Explorer', 
-      excerpt: 'Discover lesser-known destinations that will take your breath away...',
+    {
+      title: "10 Hidden Gems in Southeast Asia",
+      author: "Travel Explorer",
+      excerpt:
+        "Discover lesser-known destinations that will take your breath away...",
       likes: 156,
       comments: 42,
-      readTime: '8 min read',
-      image: '🏝️'
+      readTime: "8 min read",
+      image: "🏝️",
     },
-    { 
-      title: 'My 3-Month European Backpacking Journey', 
-      author: 'Nomad Sarah', 
-      excerpt: 'From the streets of Barcelona to the fjords of Norway, here\'s everything I learned...',
+    {
+      title: "My 3-Month European Backpacking Journey",
+      author: "Nomad Sarah",
+      excerpt:
+        "From the streets of Barcelona to the fjords of Norway, here's everything I learned...",
       likes: 203,
       comments: 67,
-      readTime: '12 min read',
-      image: '🎒'
+      readTime: "12 min read",
+      image: "🎒",
     },
-    { 
-      title: 'Foodie Guide: Street Food in Vietnam', 
-      author: 'Chef Wanderer', 
-      excerpt: 'The ultimate guide to experiencing authentic Vietnamese cuisine...',
+    {
+      title: "Foodie Guide: Street Food in Vietnam",
+      author: "Chef Wanderer",
+      excerpt:
+        "The ultimate guide to experiencing authentic Vietnamese cuisine...",
       likes: 189,
       comments: 54,
-      readTime: '6 min read',
-      image: '🍜'
+      readTime: "6 min read",
+      image: "🍜",
     },
   ];
 
   const trending = [
-    { name: 'Tokyo, Japan', travelers: 1240, trend: '+15%', image: '🗼' },
-    { name: 'Paris, France', travelers: 980, trend: '+8%', image: '🗼' },
-    { name: 'Bali, Indonesia', travelers: 856, trend: '+22%', image: '🏝️' },
-    { name: 'Dubai, UAE', travelers: 742, trend: '+12%', image: '🏙️' },
+    { name: "Tokyo, Japan", travelers: 1240, trend: "+15%", image: "🗼" },
+    { name: "Paris, France", travelers: 980, trend: "+8%", image: "🗼" },
+    { name: "Bali, Indonesia", travelers: 856, trend: "+22%", image: "🏝️" },
+    { name: "Dubai, UAE", travelers: 742, trend: "+12%", image: "🏙️" },
   ];
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -105,7 +117,7 @@ const CommunityPage = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/chat')}>
+            <Button variant="outline" onClick={() => navigate("/chat")}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Chat
             </Button>
@@ -147,10 +159,14 @@ const CommunityPage = () => {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className="p-6 hover-scale cursor-pointer">
-                  <h3 className="text-lg font-semibold mb-3">{question.title}</h3>
+                  <h3 className="text-lg font-semibold mb-3">
+                    {question.title}
+                  </h3>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {question.tags.map((tag, i) => (
-                      <Badge key={i} variant="secondary">{tag}</Badge>
+                      <Badge key={i} variant="secondary">
+                        {tag}
+                      </Badge>
                     ))}
                   </div>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -194,8 +210,12 @@ const CommunityPage = () => {
                   <div className="flex gap-4">
                     <div className="text-5xl">{blog.image}</div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-2">{blog.title}</h3>
-                      <p className="text-muted-foreground mb-3">{blog.excerpt}</p>
+                      <h3 className="text-lg font-semibold mb-2">
+                        {blog.title}
+                      </h3>
+                      <p className="text-muted-foreground mb-3">
+                        {blog.excerpt}
+                      </p>
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-4 text-muted-foreground">
                           <span className="font-medium">by {blog.author}</span>
@@ -220,7 +240,9 @@ const CommunityPage = () => {
           </TabsContent>
 
           <TabsContent value="trending" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Trending Destinations</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              Trending Destinations
+            </h2>
             <div className="grid md:grid-cols-2 gap-4">
               {trending.map((dest, index) => (
                 <motion.div
@@ -233,10 +255,15 @@ const CommunityPage = () => {
                     <div className="flex items-center gap-4">
                       <span className="text-4xl">{dest.image}</span>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1">{dest.name}</h3>
+                        <h3 className="font-semibold text-lg mb-1">
+                          {dest.name}
+                        </h3>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                           <span>{dest.travelers} travelers</span>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary">
+                          <Badge
+                            variant="secondary"
+                            className="bg-primary/10 text-primary"
+                          >
                             {dest.trend}
                           </Badge>
                         </div>

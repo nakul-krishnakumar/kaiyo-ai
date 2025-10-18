@@ -1,8 +1,8 @@
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, MessageSquare, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Plus, MessageSquare, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface ChatHistory {
   id: string;
@@ -17,13 +17,18 @@ interface ChatSidebarProps {
   currentChatId?: string;
 }
 
-export const ChatSidebar = ({ chatHistory, onNewChat, onSelectChat, currentChatId }: ChatSidebarProps) => {
+export const ChatSidebar = ({
+  chatHistory,
+  onNewChat,
+  onSelectChat,
+  currentChatId,
+}: ChatSidebarProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -49,8 +54,8 @@ export const ChatSidebar = ({ chatHistory, onNewChat, onSelectChat, currentChatI
               onClick={() => onSelectChat(chat.id)}
               className={`w-full text-left p-3 rounded-lg transition-colors ${
                 currentChatId === chat.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary hover:bg-secondary/80'
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/80"
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
