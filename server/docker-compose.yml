@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: .
+    container_name: kaiyo_backend
+    ports:
+      - "8081:8081"
+    environment:
+      DEV_CONFIG_PATH: ./config/local.yaml
+      MODEL_CONFIG_PATH: ./config/model.yaml
+      DB_CONFIG_PATH: ./config/database.yaml
+      GO_ENV: ${GO_ENV:-production}
