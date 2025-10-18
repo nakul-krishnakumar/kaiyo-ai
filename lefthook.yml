@@ -1,0 +1,21 @@
+pre-commit:
+  # Run only client-side checks when committing from repo root
+  commands:
+    lint-client:
+      run: |
+        cd client
+        npx --no-install lefthook run pre-commit || npx lefthook run pre-commit
+      include: "^client/"
+    format-client:
+      run: |
+        cd client
+        npx --no-install lefthook run pre-commit || npx lefthook run pre-commit
+      include: "^client/"
+
+pre-push:
+  commands:
+    build-client:
+      run: |
+        cd client
+        npx --no-install lefthook run pre-push || npx lefthook run pre-push
+      include: "^client/"
