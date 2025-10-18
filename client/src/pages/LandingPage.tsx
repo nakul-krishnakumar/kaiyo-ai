@@ -1,26 +1,25 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Compass, TrendingUp } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { isAuthenticated } from "@/lib/tanstack-query";
 
 const LandingPage = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   const handlePlanTrip = () => {
-    if (isAuthenticated) {
-      navigate("/chat");
+    if (isAuthenticated()) {
+      router.navigate({ to: "/chat" });
     } else {
-      navigate("/login");
+      router.navigate({ to: "/login" });
     }
   };
 
   const handleTrends = () => {
-    if (isAuthenticated) {
-      navigate("/community");
+    if (isAuthenticated()) {
+      router.navigate({ to: "/community" });
     } else {
-      navigate("/login");
+      router.navigate({ to: "/login" });
     }
   };
 

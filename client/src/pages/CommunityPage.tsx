@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,11 +14,10 @@ import {
   Eye,
   Plus,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { logout } from "@/lib/tanstack-query";
 
 const CommunityPage = () => {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
+  const router = useRouter();
 
   const questions = [
     {
@@ -97,7 +96,7 @@ const CommunityPage = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    router.navigate({ to: "/" });
   };
 
   return (
@@ -117,7 +116,10 @@ const CommunityPage = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/chat")}>
+            <Button
+              variant="outline"
+              onClick={() => router.navigate({ to: "/chat" })}
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Chat
             </Button>

@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, MessageSquare, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "@tanstack/react-router";
+import { logout } from "@/lib/tanstack-query";
 
 interface ChatHistory {
   id: string;
@@ -23,12 +23,11 @@ export const ChatSidebar = ({
   onSelectChat,
   currentChatId,
 }: ChatSidebarProps) => {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
+  const router = useRouter();
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    router.navigate({ to: "/" });
   };
 
   return (
