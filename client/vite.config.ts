@@ -5,6 +5,16 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/auth": {
+        target: "http://localhost:8081",
+        changeOrigin: true,
+      },
+      "/api": {
+        target: "http://localhost:8081",
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [react()],
   resolve: {
