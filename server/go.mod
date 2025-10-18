@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/joho/godotenv v1.5.1
-	github.com/openai/openai-go v1.10.1
+	github.com/openai/openai-go/v3 v3.5.0
 	github.com/spf13/viper v1.20.1
 	golang.org/x/crypto v0.40.0
 )
