@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -8,22 +8,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const authStatus = localStorage.getItem('kaiyoAuth');
-    setIsAuthenticated(authStatus === 'true');
+    const authStatus = localStorage.getItem("kaiyoAuth");
+    setIsAuthenticated(authStatus === "true");
   }, []);
 
-  const login = (email: string, password: string) => {
+  const login = (_email: string, _password: string) => {
     // Dummy authentication - accepts any credentials
-    localStorage.setItem('kaiyoAuth', 'true');
+    void _email;
+    void _password;
+    localStorage.setItem("kaiyoAuth", "true");
     setIsAuthenticated(true);
   };
 
   const logout = () => {
-    localStorage.removeItem('kaiyoAuth');
+    localStorage.removeItem("kaiyoAuth");
     setIsAuthenticated(false);
   };
 
@@ -34,10 +38,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

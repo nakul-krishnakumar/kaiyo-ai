@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Compass, TrendingUp } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Compass, TrendingUp } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -10,17 +10,17 @@ const LandingPage = () => {
 
   const handlePlanTrip = () => {
     if (isAuthenticated) {
-      navigate('/chat');
+      navigate("/chat");
     } else {
-      navigate('/login');
+      navigate("/login");
     }
   };
 
   const handleTrends = () => {
     if (isAuthenticated) {
-      navigate('/community');
+      navigate("/community");
     } else {
-      navigate('/login');
+      navigate("/login");
     }
   };
 

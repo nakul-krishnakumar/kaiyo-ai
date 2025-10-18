@@ -1,17 +1,20 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { MapPin, Hotel, Utensils, Plane } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapPin, Hotel, Utensils, Plane } from "lucide-react";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
 export interface ItineraryDay {
@@ -49,20 +52,20 @@ export const TravelResults = ({ travelData }: TravelResultsProps) => {
         <h2 className="text-2xl font-bold mb-2">{travelData.destination}</h2>
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{travelData.dates}</p>
-          <p className="text-lg font-bold text-primary">{travelData.totalCost}</p>
+          <p className="text-lg font-bold text-primary">
+            {travelData.totalCost}
+          </p>
         </div>
       </div>
 
       <div className="h-64 relative">
         <MapContainer
-          // @ts-ignore - React Leaflet props types
           center={travelData.coordinates}
           zoom={13}
           className="h-full w-full"
           scrollWheelZoom={false}
         >
           <TileLayer
-            // @ts-ignore - React Leaflet props types
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
@@ -100,7 +103,10 @@ export const TravelResults = ({ travelData }: TravelResultsProps) => {
                   <CardContent>
                     <ul className="space-y-2">
                       {day.activities.map((activity, idx) => (
-                        <li key={idx} className="text-sm flex items-start gap-2">
+                        <li
+                          key={idx}
+                          className="text-sm flex items-start gap-2"
+                        >
                           <span className="text-primary mt-1">•</span>
                           <span>{activity}</span>
                         </li>
@@ -114,15 +120,21 @@ export const TravelResults = ({ travelData }: TravelResultsProps) => {
         </TabsContent>
 
         <TabsContent value="restaurant" className="flex-1 px-4">
-          <p className="text-sm text-muted-foreground">Restaurant recommendations coming soon...</p>
+          <p className="text-sm text-muted-foreground">
+            Restaurant recommendations coming soon...
+          </p>
         </TabsContent>
 
         <TabsContent value="hotel" className="flex-1 px-4">
-          <p className="text-sm text-muted-foreground">Hotel recommendations coming soon...</p>
+          <p className="text-sm text-muted-foreground">
+            Hotel recommendations coming soon...
+          </p>
         </TabsContent>
 
         <TabsContent value="flights" className="flex-1 px-4">
-          <p className="text-sm text-muted-foreground">Flight options coming soon...</p>
+          <p className="text-sm text-muted-foreground">
+            Flight options coming soon...
+          </p>
         </TabsContent>
       </Tabs>
     </div>

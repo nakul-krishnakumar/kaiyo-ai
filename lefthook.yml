@@ -1,0 +1,15 @@
+pre-commit:
+  # Only run when files under client/ changed
+  commands:
+    client-lint:
+      run: cd client && npm run lint
+      include: "^client/"
+    client-format:
+      run: cd client && npm run format
+      include: "^client/"
+
+pre-push:
+  commands:
+    client-build:
+      run: cd client && npm run build
+      include: "^client/"

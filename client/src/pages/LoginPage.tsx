@@ -1,23 +1,29 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
-import { ArrowLeft } from 'lucide-react';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
+import { ArrowLeft } from "lucide-react";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login(email, password);
-    navigate('/chat');
+    navigate("/chat");
   };
 
   return (
@@ -28,11 +34,7 @@ const LoginPage = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/')}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => navigate("/")} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Button>
@@ -75,7 +77,7 @@ const LoginPage = () => {
               </Button>
             </form>
             <div className="mt-4 text-center text-sm text-muted-foreground">
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <a href="#" className="text-primary hover:underline">
                 Create account
               </a>
