@@ -80,3 +80,22 @@ func (h *Handler) GetHistory(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(msgs)
 }
+
+
+func (h *Handler) GetItinerary(w http.ResponseWriter, r *http.Request) {
+	chatID := r.PathValue("chatID")
+
+	if chatID == "" {
+		http.Error(w, "parameter chatID is missing", http.StatusBadRequest)
+		return
+	}
+
+	msgs, err := h.Controller.GetItinerary(chatID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(msgs)
+}
+

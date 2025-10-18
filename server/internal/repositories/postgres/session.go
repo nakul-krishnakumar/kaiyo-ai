@@ -14,7 +14,7 @@ type SessionRepo struct {
 }
 
 func NewSessionRepo(pool *pgxpool.Pool) *SessionRepo {
-	return &SessionRepo{ pool: pool}
+	return &SessionRepo{pool: pool}
 }
 
 // Create a new Session with the details
@@ -43,7 +43,7 @@ func (r *SessionRepo) GetByToken(ctx context.Context, refreshToken string) (*mod
 func (r *SessionRepo) RevokeSessionByToken(ctx context.Context, refreshToken string) error {
 	return nil
 }
-	
+
 func (r *SessionRepo) RevokeSessionByUserID(ctx context.Context, userID uuid.UUID) error {
 	return nil
 }

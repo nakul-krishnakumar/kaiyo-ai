@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -9,9 +10,52 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/llm"
-	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/v3"
 	"github.com/spf13/viper"
 )
+
+var itinerarySchema = openai.FunctionParameters{
+	"$schema":  "http://json-schema.org/draft-07/schema#",
+	"title":    "Itinerary",
+	"type":     "object",
+	"required": []string{"destination", "days"},
+	"properties": map[string]any{
+		"destination": map[string]any{"type": "string"},
+		"startDate":   map[string]any{"type": "string"},
+		"endDate":     map[string]any{"type": "string"},
+		"currency":    map[string]any{"type": "string"},
+		"days": map[string]any{
+			"type": "array", "minItems": 1,
+			"items": map[string]any{
+				"type": "object", "required": []string{"day", "items"},
+				"properties": map[string]any{
+					"day":   map[string]any{"type": "integer", "minimum": 1},
+					"label": map[string]any{"type": "string"},
+					"items": map[string]any{
+						"type": "array",
+						"items": map[string]any{
+							"type": "object", "required": []string{"title"},
+							"properties": map[string]any{
+								"title":     map[string]any{"type": "string"},
+								"city":      map[string]any{"type": "string"},
+								"place":     map[string]any{"type": "string"},
+								"category":  map[string]any{"type": "string"},
+								"startTime": map[string]any{"type": "string"},
+								"endTime":   map[string]any{"type": "string"},
+								"notes":     map[string]any{"type": "string"},
+								"lat":       map[string]any{"type": "number"},
+								"lon":       map[string]any{"type": "number"},
+							},
+							"additionalProperties": false,
+						},
+					},
+				},
+				"additionalProperties": false,
+			},
+		},
+	},
+	"additionalProperties": false,
+}
 
 func NewController() *Controller {
 	if err := godotenv.Load(); err != nil {
@@ -83,12 +127,25 @@ func (c *Controller) StreamMessage(
 		},
 	})
 
+	tools := []openai.ChatCompletionToolUnionParam{
+		{
+			OfFunction: &openai.ChatCompletionFunctionToolParam{
+				Function: openai.FunctionDefinitionParam{
+					Name:        "save_itinerary",
+					Description: openai.String("Call this ONLY when a finalized itinerary is ready."),
+					Parameters: itinerarySchema,
+				},
+			},
+		},
+	}
+
 	stream := c.Client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
 		Model:    openai.ChatModel(c.Model.Name),
 		Messages: c.History,
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),
 		},
+		Tools: tools,
 	})
 
 	acc := openai.ChatCompletionAccumulator{}
@@ -116,6 +173,24 @@ func (c *Controller) StreamMessage(
 
 	finalContent := tokenBuilder.String()
 
+	toolCalls := acc.Choices[0].Message.ToolCalls
+
+	if len(toolCalls) == 0 {
+		fmt.Println("NO TOOL CALLED")
+	}
+	for _, toolCall := range toolCalls {
+		if toolCall.Function.Name == "save_itinerary" {
+			fmt.Println("SAVE_ITINERARY TOOL CALLED!")
+			var itin Itinerary
+			err := json.Unmarshal([]byte(toolCall.Function.Arguments), &itin)
+			if err != nil {
+				panic(err)
+			}
+
+			c.Itinerary = &itin
+		}
+	}
+
 	// Add assistant response to History
 	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
 		OfAssistant: &openai.ChatCompletionAssistantMessageParam{
@@ -136,3 +211,15 @@ func (c *Controller) GetHistory(chatID string) ([]openai.ChatCompletionMessagePa
 
 	return c.History, nil
 }
+
+
+func (c *Controller) GetItinerary(chatID string) (*Itinerary, error) {
+	// instead of keeping history as chatcompletion obj,
+	// keep it as a []Message object
+	// then write a function to convert []Message to chatcompletion
+	// this should run once at the beginning of the chat session
+
+	return c.Itinerary, nil
+}
+
+
