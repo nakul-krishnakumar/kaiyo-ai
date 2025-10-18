@@ -61,13 +61,13 @@ func (r *UserRepo) Exists(ctx context.Context, email string) (bool, error) {
 // GetByEmail implements repositories.UserRepository
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	query := `
-        SELECT id, email, password, first_name, last_name, user_name, google_id, twitter_id,
+        SELECT id, email, password, first_name, last_name, google_id, twitter_id,
                email_verified, is_active, created_at, updated_at, last_login_at
         FROM users WHERE email = $1 AND is_active = true`
 
 	user := &models.User{}
 	err := r.pool.QueryRow(ctx, query, email).Scan(
-		&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.UserName, &user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
+		&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.GoogleID, &user.TwitterID, &user.EmailVerified, &user.IsActive,
 		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
 	)
 
