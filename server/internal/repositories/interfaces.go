@@ -25,6 +25,6 @@ type SessionRepository interface {
 
 // Repositories aggregates all repositories
 type Repositories struct {
-	User UserRepository
+	User    UserRepository
 	Session SessionRepository
 }

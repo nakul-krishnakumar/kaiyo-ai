@@ -56,7 +56,7 @@ func (h *Handler) GetDeviceInfo(r *http.Request) *models.DeviceInfo {
 		OS:         h.parseOS(userAgent),
 		DeviceType: h.parseDeviceType(userAgent),
 		AppVersion: r.Header.Get("X-App-Version"), // Custom header from mobile apps
-		Country:    "", // You can add GeoIP lookup later
+		Country:    "",                            // You can add GeoIP lookup later
 		LastSeenAt: time.Now(),
 	}
 }
@@ -281,7 +281,7 @@ func (h *Handler) EmailSignInHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := models.User{
-		ID: uuid.New(),
+		ID:        uuid.New(),
 		Email:     req.Email,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,

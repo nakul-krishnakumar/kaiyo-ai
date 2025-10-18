@@ -8,7 +8,7 @@ import (
 // NewRepositories creates all repository implementations
 func NewRepositories(pool *pgxpool.Pool) *Repositories {
 	return &Repositories{
-		User: postgres.NewUserRepo(pool),
+		User:    postgres.NewUserRepo(pool),
 		Session: postgres.NewSessionRepo(pool),
 	}
 }
