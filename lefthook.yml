@@ -1,21 +1,15 @@
 pre-commit:
-  # Run only client-side checks when committing from repo root
+  # Only run when files under client/ changed
   commands:
-    lint-client:
-      run: |
-        cd client
-        npx --no-install lefthook run pre-commit || npx lefthook run pre-commit
+    client-lint:
+      run: cd client && npm run lint
       include: "^client/"
-    format-client:
-      run: |
-        cd client
-        npx --no-install lefthook run pre-commit || npx lefthook run pre-commit
+    client-format:
+      run: cd client && npm run format
       include: "^client/"
 
 pre-push:
   commands:
-    build-client:
-      run: |
-        cd client
-        npx --no-install lefthook run pre-push || npx lefthook run pre-push
+    client-build:
+      run: cd client && npm run build
       include: "^client/"
