@@ -7,3 +7,18 @@
     ```
 
 - Run ```source ./scripts/migrate-env.sh``` for setting up goose environment variables.
+
+### How to use run backend
+
+* **For development:**
+
+  ```bash
+  docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+  ```
+* **For production:**
+
+  ```bash
+  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+  ```
+
+---

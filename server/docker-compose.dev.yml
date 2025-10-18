@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - .:/app
+    environment:
+      GO_ENV: development
+    command: ["air", "--", "--port", "8081"]
+    ports:
+      - "8081:8081"

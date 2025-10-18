@@ -1,0 +1,21 @@
+# ignore local artifacts
+.git
+.gitignore
+tmp
+tmp/*
+node_modules
+node_modules/**
+*.log
+*.tmp
+*.swp
+.env.local
+.DS_Store
+
+# Go build outputs
+bin
+*.exe
+*.test
+
+# Editor files
+.vscode
+.idea

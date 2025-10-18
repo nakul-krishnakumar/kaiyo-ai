@@ -1,0 +1,10 @@
+services:
+  backend:
+    build:
+      context: .
+      target: prod
+    environment:
+      GO_ENV: production
+    restart: always
+    ports:
+      - "8081:8081"
