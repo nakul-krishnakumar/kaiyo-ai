@@ -7,7 +7,7 @@ import (
 )
 
 func NewHandler(ctrl *Controller) *Handler {
-	return &Handler{Controller: ctrl}
+	return &Handler{ Controller: ctrl }
 }
 
 // POST api/v1/chats/
@@ -49,8 +49,8 @@ func (h *Handler) PostChat(w http.ResponseWriter, r *http.Request) {
 		case err := <-done:
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
 			}
+			return
 
 		case chunk, ok := <-chunkCh:
 			if !ok {

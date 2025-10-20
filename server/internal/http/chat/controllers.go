@@ -9,53 +9,11 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	calltools "github.com/nakul-krishnakumar/kaiyo-ai/internal/http/chat/call_tools"
 	"github.com/nakul-krishnakumar/kaiyo-ai/internal/llm"
 	"github.com/openai/openai-go/v3"
 	"github.com/spf13/viper"
 )
-
-var itinerarySchema = openai.FunctionParameters{
-	"$schema":  "http://json-schema.org/draft-07/schema#",
-	"title":    "Itinerary",
-	"type":     "object",
-	"required": []string{"destination", "days"},
-	"properties": map[string]any{
-		"destination": map[string]any{"type": "string"},
-		"startDate":   map[string]any{"type": "string"},
-		"endDate":     map[string]any{"type": "string"},
-		"currency":    map[string]any{"type": "string"},
-		"days": map[string]any{
-			"type": "array", "minItems": 1,
-			"items": map[string]any{
-				"type": "object", "required": []string{"day", "items"},
-				"properties": map[string]any{
-					"day":   map[string]any{"type": "integer", "minimum": 1},
-					"label": map[string]any{"type": "string"},
-					"items": map[string]any{
-						"type": "array",
-						"items": map[string]any{
-							"type": "object", "required": []string{"title"},
-							"properties": map[string]any{
-								"title":     map[string]any{"type": "string"},
-								"city":      map[string]any{"type": "string"},
-								"place":     map[string]any{"type": "string"},
-								"category":  map[string]any{"type": "string"},
-								"startTime": map[string]any{"type": "string"},
-								"endTime":   map[string]any{"type": "string"},
-								"notes":     map[string]any{"type": "string"},
-								"lat":       map[string]any{"type": "number"},
-								"lon":       map[string]any{"type": "number"},
-							},
-							"additionalProperties": false,
-						},
-					},
-				},
-				"additionalProperties": false,
-			},
-		},
-	},
-	"additionalProperties": false,
-}
 
 func NewController() *Controller {
 	if err := godotenv.Load(); err != nil {
@@ -103,26 +61,101 @@ func NewController() *Controller {
 		},
 	})
 
+	var tools = calltools.NewCallTools()
+
 	return &Controller{
 		Client:  client,
 		History: msgs,
 		Model:   model,
+		Tools:   tools,
 	}
 }
 
-func (c *Controller) StreamMessage(
-	ctx context.Context,
-	userInput UserInput,
-	chunkCh chan<- string,
-) error {
+func (c *Controller) doToolCalling(ctx context.Context) error {
+	params := openai.ChatCompletionNewParams{
+		Messages:        c.History,
+		Tools:           c.Tools.InitOpenAITools(),
+		Seed:            openai.Int(0),
+		Model:           openai.ChatModel(c.Model.Name),
+		ReasoningEffort: openai.ReasoningEffortMedium,
+	}
 
-	defer close(chunkCh) // close the channel at the end of this function
+	completion, err := c.Client.Chat.Completions.New(ctx, params)
+	if err != nil {
+		return err
+	}
 
-	// add user query to context history
+	toolCalls := completion.Choices[0].Message.ToolCalls
+	// if no tools called, then stop the chat
+	if len(toolCalls) == 0 {
+		fmt.Println("NO TOOL CALLED")
+		c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+			OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+				Content: openai.ChatCompletionAssistantMessageParamContentUnion{
+					OfString: openai.String(completion.Choices[0].Message.Content),
+				},
+			},
+		})
+
+		return nil
+	}
+
+	c.History = append(c.History, completion.Choices[0].Message.ToParam())
+	fmt.Println("msg.toparam 1: ", completion.Choices[0].Message.ToParam())
+	for _, toolCall := range toolCalls {
+		result := c.Tools.HandleToolCall(ctx, toolCall.Function.Name, toolCall.Function.Arguments)
+
+		// Append tool result to history
+		resultJSON, _ := json.Marshal(result)
+		c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+			OfTool: &openai.ChatCompletionToolMessageParam{
+				ToolCallID: toolCall.ID,
+				Content: openai.ChatCompletionToolMessageParamContentUnion{
+					OfString: openai.String(string(resultJSON)),
+				},
+			},
+		})
+	}
+
+	// params.Messages = c.History
+	// completion, err = c.Client.Chat.Completions.New(ctx, params)
+	// if err != nil {
+	// 	return err
+	// }
+	// c.History = append(c.History, completion.Choices[0].Message.ToParam())
+	// fmt.Println("msg.toparam 2: ", completion.Choices[0].Message.ToParam())
+
+	return nil
+}
+
+func (c *Controller) performPlanningPhase(ctx context.Context, userInput UserInput) error {
+	// Add user query to history
 	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
 		OfUser: &openai.ChatCompletionUserMessageParam{
 			Content: openai.ChatCompletionUserMessageParamContentUnion{
 				OfString: openai.String(userInput.Content),
+			},
+		},
+	})
+
+	const maxIters = 1
+	for iter := 0; iter < maxIters; iter++ {
+		if err := c.doToolCalling(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *Controller) performStreamingPhase(ctx context.Context, chunkCh chan<- string) error {
+	fmt.Println("INSIDE PHASE 2") /////////////////////////////////////
+
+	// Add a user prompt to trigger narrative generation
+	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+		OfUser: &openai.ChatCompletionUserMessageParam{
+			Content: openai.ChatCompletionUserMessageParamContentUnion{
+				OfString: openai.String("Now provide a detailed travel itinerary based on the information gathered. Present it in a narrative format for the user."),
 			},
 		},
 	})
@@ -133,11 +166,29 @@ func (c *Controller) StreamMessage(
 				Function: openai.FunctionDefinitionParam{
 					Name:        "save_itinerary",
 					Description: openai.String("Call this ONLY when a finalized itinerary is ready."),
-					Parameters: itinerarySchema,
+					Parameters:  itinerarySchema,
 				},
 			},
 		},
 	}
+
+	// // Before streaming, ensure no pending tool calls in history:
+	// cleaned := []openai.ChatCompletionMessageParamUnion{}
+	// for _, msg := range c.History {
+	// 	// Filter out any assistant message that has ToolCalls
+	// 	if msg.OfAssistant != nil && len(msg.OfAssistant.ToolCalls) > 0 {
+	// 		continue
+	// 	}
+	// 	cleaned = append(cleaned, msg)
+	// }
+	// c.History = cleaned
+
+	// // Now append a placeholder assistant turn indicating "ready to save"
+	// c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+	// 	OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+	// 		// no content, no ToolCalls
+	// 	},
+	// })
 
 	stream := c.Client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
 		Model:    openai.ChatModel(c.Model.Name),
@@ -155,16 +206,15 @@ func (c *Controller) StreamMessage(
 		chunk := stream.Current()
 		acc.AddChunk(chunk)
 
-		if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
-			delta := chunk.Choices[0].Delta.Content
-			tokenBuilder.WriteString(delta)
-			chunkCh <- delta // add the response chunk to channel
-		}
+		if len(chunk.Choices) > 0 {
+			fmt.Println("chunk: ", chunk.Choices[0].Delta.Content)
 
-		// if _, ok := acc.JustFinishedToolCall(); ok {
-		//     // Extract and invoke tool function.
-		//     // Then feed the result back by calling the LLM again
-		// }
+			if chunk.Choices[0].Delta.Content != "" {
+				delta := chunk.Choices[0].Delta.Content
+				tokenBuilder.WriteString(delta)
+				chunkCh <- delta // add the response chunk to channel
+			}
+		}
 	}
 
 	if err := stream.Err(); err != nil {
@@ -203,6 +253,24 @@ func (c *Controller) StreamMessage(
 	return nil
 }
 
+func (c *Controller) StreamMessage(ctx context.Context, userInput UserInput, chunkCh chan<- string) error {
+
+	// Phase 1: Synchronous tool orchestration
+	if err := c.performPlanningPhase(ctx, userInput); err != nil {
+		return err
+	}
+
+	fmt.Println("PHASE 1 DONE")
+
+	// Phase 2: Streaming final response, including save_itinerary
+	if err := c.performStreamingPhase(ctx, chunkCh); err != nil {
+		return err
+	}
+	defer close(chunkCh)
+
+	return nil
+}
+
 func (c *Controller) GetHistory(chatID string) ([]openai.ChatCompletionMessageParamUnion, error) {
 	// instead of keeping history as chatcompletion obj,
 	// keep it as a []Message object
@@ -212,7 +280,6 @@ func (c *Controller) GetHistory(chatID string) ([]openai.ChatCompletionMessagePa
 	return c.History, nil
 }
 
-
 func (c *Controller) GetItinerary(chatID string) (*Itinerary, error) {
 	// instead of keeping history as chatcompletion obj,
 	// keep it as a []Message object
@@ -221,5 +288,3 @@ func (c *Controller) GetItinerary(chatID string) (*Itinerary, error) {
 
 	return c.Itinerary, nil
 }
-
-

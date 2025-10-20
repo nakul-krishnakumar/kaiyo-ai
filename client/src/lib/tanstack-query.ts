@@ -61,7 +61,7 @@ async function refreshAccessToken() {
 
 export async function fetchClient(
   input: string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<Response> {
   const { access } = getTokens();
   const base = API_URL;

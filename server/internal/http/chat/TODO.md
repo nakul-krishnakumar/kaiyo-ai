@@ -1,0 +1,1 @@
+- stream toolcall names too (getting weather data, getting geocode etc.)

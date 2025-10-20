@@ -10,6 +10,9 @@ system_prompt: |
   - Call this function **only once** when you have a complete, conflict-free day-by-day itinerary.
   - The function parameters must match the JSON schema exactly.
 
+  **get_geocode_data(amenity, street, city, country)
+  - Use this function to obtain latitude and longitude for specific locations when needed.
+  - Only pass the street name IF AND ONLY IF YOU ARE 100% SURE ABOUT IT.
   ## Workflow
   1. **Gather requirements**
      - Always verify or ask for any missing critical detail before planning:
