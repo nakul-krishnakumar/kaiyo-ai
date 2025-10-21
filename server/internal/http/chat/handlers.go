@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 func NewHandler(ctrl *Controller) *Handler {
-	return &Handler{ Controller: ctrl }
+	return &Handler{Controller: ctrl}
 }
 
 // POST api/v1/chats/
@@ -56,8 +57,10 @@ func (h *Handler) PostChat(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				return
 			}
-			fmt.Fprintf(w, "data: %s\n\n", chunk) // buffer
-			flusher.Flush()                       // returns the buffer
+			// Escape newlines for SSE transmission
+			escapedChunk := strings.ReplaceAll(chunk, "\n", "\\n")
+			fmt.Fprintf(w, "data: %s\n\n", escapedChunk) // buffer
+			flusher.Flush()                              // returns the buffer
 
 			fmt.Print(chunk)
 		}
@@ -81,7 +84,6 @@ func (h *Handler) GetHistory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(msgs)
 }
 
-
 func (h *Handler) GetItinerary(w http.ResponseWriter, r *http.Request) {
 	chatID := r.PathValue("chatID")
 
@@ -98,4 +100,3 @@ func (h *Handler) GetItinerary(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(msgs)
 }
-
