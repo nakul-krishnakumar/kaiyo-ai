@@ -16,8 +16,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM golang:1.24-alpine AS dev
 RUN apk add --no-cache git ca-certificates tzdata
 # Install Air and Goose into the Go bin
-RUN go install github.com/air-verse/air@v1.62.0 \
- && go install github.com/pressly/goose/v3/cmd/goose@latest
+RUN go install github.com/air-verse/air@v1.62.0
 
 WORKDIR /app
 # Bind-mount your source & migrations at runtime:
