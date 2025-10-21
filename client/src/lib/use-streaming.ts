@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 
 function findSafeBoundary(text: string): number {
   // 1. If there's a closing code fence, split after the trailing newline
-  const fenceEnd = text.lastIndexOf("```")
+  const fenceEnd = text.lastIndexOf("```");
   if (fenceEnd !== -1) {
     const afterFence = text.indexOf("\n", fenceEnd + 3);
     if (afterFence !== -1) {

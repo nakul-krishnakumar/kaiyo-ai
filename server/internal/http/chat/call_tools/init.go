@@ -42,21 +42,40 @@ func (t *Tools) InitOpenAITools() []openai.ChatCompletionToolUnionParam {
 		// 		},
 		// 	},
 		// },
+		// {
+		// 	OfFunction: &openai.ChatCompletionFunctionToolParam{
+		// 		Function: openai.FunctionDefinitionParam{
+		// 			Name:        "save_itinerary",
+		// 			Description: openai.String("Call this ONLY when a finalized itinerary is ready."),
+		// 			Parameters:  itinerarySchema,
+		// 		},
+		// 	},
+		// },
 		// Get Geocodes from place name
 		{
 			OfFunction: &openai.ChatCompletionFunctionToolParam{
 				Function: openai.FunctionDefinitionParam{
 					Name:        "get_geocode_data",
-					Description: openai.String("Convert a place name to latitude and longitude."),
+					Description: openai.String("Convert multiple place names to latitude/longitude in a single batch call. Pass an array of location objects."),
 					Parameters: map[string]any{
-						"type":     "object",
-						"required": []string{"city", "country"},
+						"type": "object",
+						"required": []string{"locations"},
 						"properties": map[string]any{
-							"amenity": map[string]any{"type": "string"},
-							"street":  map[string]any{"type": "string"},
-							"city":    map[string]any{"type": "string"},
-							"state":   map[string]any{"type": "string"},
-							"country": map[string]any{"type": "string"},
+							"locations": map[string]any{
+								"type": "array",
+								"description": "Array of location objects to geocode",
+								"items": map[string]any{
+									"type": "object",
+									"required": []string{"city", "country"},
+									"properties": map[string]any{
+										"amenity": map[string]any{"type": "string", "description": "Optional: specific venue or building"},
+										"street":  map[string]any{"type": "string", "description": "Optional: street address"},
+										"city":    map[string]any{"type": "string"},
+										"state":   map[string]any{"type": "string", "description": "Optional: state/province"},
+										"country": map[string]any{"type": "string"},
+									},
+								},
+							},
 						},
 					},
 				},

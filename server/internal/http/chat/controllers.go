@@ -101,7 +101,6 @@ func (c *Controller) doToolCalling(ctx context.Context) error {
 	}
 
 	c.History = append(c.History, completion.Choices[0].Message.ToParam())
-	fmt.Println("msg.toparam 1: ", completion.Choices[0].Message.ToParam())
 	for _, toolCall := range toolCalls {
 		result := c.Tools.HandleToolCall(ctx, toolCall.Function.Name, toolCall.Function.Arguments)
 
@@ -117,14 +116,6 @@ func (c *Controller) doToolCalling(ctx context.Context) error {
 		})
 	}
 
-	// params.Messages = c.History
-	// completion, err = c.Client.Chat.Completions.New(ctx, params)
-	// if err != nil {
-	// 	return err
-	// }
-	// c.History = append(c.History, completion.Choices[0].Message.ToParam())
-	// fmt.Println("msg.toparam 2: ", completion.Choices[0].Message.ToParam())
-
 	return nil
 }
 
@@ -138,7 +129,7 @@ func (c *Controller) performPlanningPhase(ctx context.Context, userInput UserInp
 		},
 	})
 
-	const maxIters = 1
+	const maxIters = 3
 	for iter := 0; iter < maxIters; iter++ {
 		if err := c.doToolCalling(ctx); err != nil {
 			return err
@@ -149,46 +140,46 @@ func (c *Controller) performPlanningPhase(ctx context.Context, userInput UserInp
 }
 
 func (c *Controller) performStreamingPhase(ctx context.Context, chunkCh chan<- string) error {
+	defer close(chunkCh)
 	fmt.Println("INSIDE PHASE 2") /////////////////////////////////////
 
 	// Add a user prompt to trigger narrative generation
 	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
 		OfUser: &openai.ChatCompletionUserMessageParam{
 			Content: openai.ChatCompletionUserMessageParamContentUnion{
-				OfString: openai.String("Now provide a detailed travel itinerary based on the information gathered. Present it in a narrative format for the user."),
+				OfString: openai.String(`Generate the complete itinerary in proper Markdown format, ONLY if all necessary data is available.
+
+CRITICAL FORMATTING RULES:
+1. Add TWO newlines (\n\n) after every heading (##)
+2. Add TWO newlines (\n\n) before and after horizontal rules (---)
+3. Add ONE newline (\n) after each bullet point
+4. Add TWO newlines (\n\n) between different sections
+5. Use proper markdown syntax:
+   - Headings: ## Day 1: Title
+   - Horizontal rules: ---
+   - Bullet points: - Item text
+   - Bold: **text**
+   - Italic: *text*
+
+Example format:
+## Day 1: Monday, April 22 – Welcome to Paris
+
+- 09:00 – 11:00 • Activity Name
+  Description here
+- 11:00 – 14:00 • Next Activity
+  Description here
+
+---
+
+## Day 2: Tuesday, April 23 – Next Day
+
+- 08:30 – 10:00 • Morning Activity
+  Description here
+
+Generate the itinerary now with proper spacing.`),
 			},
 		},
 	})
-
-	tools := []openai.ChatCompletionToolUnionParam{
-		{
-			OfFunction: &openai.ChatCompletionFunctionToolParam{
-				Function: openai.FunctionDefinitionParam{
-					Name:        "save_itinerary",
-					Description: openai.String("Call this ONLY when a finalized itinerary is ready."),
-					Parameters:  itinerarySchema,
-				},
-			},
-		},
-	}
-
-	// // Before streaming, ensure no pending tool calls in history:
-	// cleaned := []openai.ChatCompletionMessageParamUnion{}
-	// for _, msg := range c.History {
-	// 	// Filter out any assistant message that has ToolCalls
-	// 	if msg.OfAssistant != nil && len(msg.OfAssistant.ToolCalls) > 0 {
-	// 		continue
-	// 	}
-	// 	cleaned = append(cleaned, msg)
-	// }
-	// c.History = cleaned
-
-	// // Now append a placeholder assistant turn indicating "ready to save"
-	// c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
-	// 	OfAssistant: &openai.ChatCompletionAssistantMessageParam{
-	// 		// no content, no ToolCalls
-	// 	},
-	// })
 
 	stream := c.Client.Chat.Completions.NewStreaming(ctx, openai.ChatCompletionNewParams{
 		Model:    openai.ChatModel(c.Model.Name),
@@ -196,7 +187,7 @@ func (c *Controller) performStreamingPhase(ctx context.Context, chunkCh chan<- s
 		StreamOptions: openai.ChatCompletionStreamOptionsParam{
 			IncludeUsage: openai.Bool(true),
 		},
-		Tools: tools,
+		// Tools: tools,
 	})
 
 	acc := openai.ChatCompletionAccumulator{}
@@ -207,7 +198,7 @@ func (c *Controller) performStreamingPhase(ctx context.Context, chunkCh chan<- s
 		acc.AddChunk(chunk)
 
 		if len(chunk.Choices) > 0 {
-			fmt.Println("chunk: ", chunk.Choices[0].Delta.Content)
+			fmt.Print(chunk.Choices[0].Delta.Content)
 
 			if chunk.Choices[0].Delta.Content != "" {
 				delta := chunk.Choices[0].Delta.Content
@@ -223,11 +214,60 @@ func (c *Controller) performStreamingPhase(ctx context.Context, chunkCh chan<- s
 
 	finalContent := tokenBuilder.String()
 
-	toolCalls := acc.Choices[0].Message.ToolCalls
+	// Add assistant response to History
+	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+		OfAssistant: &openai.ChatCompletionAssistantMessageParam{
+			Content: openai.ChatCompletionAssistantMessageParamContentUnion{
+				OfString: openai.String(finalContent),
+			},
+		},
+	})
+
+	return nil
+}
+
+func (c *Controller) performSavingPhase() error {
+	// Add a user prompt to trigger save_itinerary tool call
+	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
+		OfUser: &openai.ChatCompletionUserMessageParam{
+			Content: openai.ChatCompletionUserMessageParamContentUnion{
+				OfString: openai.String(`
+				IF AND ONLY IF all the necessary details for an itinerary exists, call save_itinerary tool to save the data.`),
+			},
+		},
+	})
+
+	tools := []openai.ChatCompletionToolUnionParam{
+		{
+			OfFunction: &openai.ChatCompletionFunctionToolParam{
+				Function: openai.FunctionDefinitionParam{
+					Name:        "save_itinerary",
+					Description: openai.String("Call this ONLY after narrative, to save the finalised itinerary."),
+					Parameters:  itinerarySchema,
+				},
+			},
+		},
+	}
+
+	params := openai.ChatCompletionNewParams{
+		Messages:        c.History,
+		Tools:           tools,
+		Seed:            openai.Int(0),
+		Model:           openai.ChatModel(c.Model.Name),
+		ReasoningEffort: openai.ReasoningEffortMedium,
+	}
+
+	completion, err := c.Client.Chat.Completions.New(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	toolCalls := completion.Choices[0].Message.ToolCalls
 
 	if len(toolCalls) == 0 {
 		fmt.Println("NO TOOL CALLED")
 	}
+
 	for _, toolCall := range toolCalls {
 		if toolCall.Function.Name == "save_itinerary" {
 			fmt.Println("SAVE_ITINERARY TOOL CALLED!")
@@ -241,32 +281,27 @@ func (c *Controller) performStreamingPhase(ctx context.Context, chunkCh chan<- s
 		}
 	}
 
-	// Add assistant response to History
-	c.History = append(c.History, openai.ChatCompletionMessageParamUnion{
-		OfAssistant: &openai.ChatCompletionAssistantMessageParam{
-			Content: openai.ChatCompletionAssistantMessageParamContentUnion{
-				OfString: openai.String(finalContent),
-			},
-		},
-	})
-
 	return nil
 }
 
 func (c *Controller) StreamMessage(ctx context.Context, userInput UserInput, chunkCh chan<- string) error {
 
-	// Phase 1: Synchronous tool orchestration
+	// Synchronous tool orchestration
 	if err := c.performPlanningPhase(ctx, userInput); err != nil {
 		return err
 	}
 
 	fmt.Println("PHASE 1 DONE")
 
-	// Phase 2: Streaming final response, including save_itinerary
+	// Streaming final response
 	if err := c.performStreamingPhase(ctx, chunkCh); err != nil {
 		return err
 	}
-	defer close(chunkCh)
+
+	// save_itinerary tool is called as a background job
+	if err := c.performSavingPhase(); err != nil {
+		slog.Error("Could not save itinerary", slog.String("error", err.Error()))
+	}
 
 	return nil
 }
