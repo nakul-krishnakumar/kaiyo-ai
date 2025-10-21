@@ -58,14 +58,14 @@ func (t *Tools) InitOpenAITools() []openai.ChatCompletionToolUnionParam {
 					Name:        "get_geocode_data",
 					Description: openai.String("Convert multiple place names to latitude/longitude in a single batch call. Pass an array of location objects."),
 					Parameters: map[string]any{
-						"type": "object",
+						"type":     "object",
 						"required": []string{"locations"},
 						"properties": map[string]any{
 							"locations": map[string]any{
-								"type": "array",
+								"type":        "array",
 								"description": "Array of location objects to geocode",
 								"items": map[string]any{
-									"type": "object",
+									"type":     "object",
 									"required": []string{"city", "country"},
 									"properties": map[string]any{
 										"amenity": map[string]any{"type": "string", "description": "Optional: specific venue or building"},

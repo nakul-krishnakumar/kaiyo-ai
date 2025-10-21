@@ -12,7 +12,7 @@ func (t *Tools) HandleToolCall(ctx context.Context, funcName string, funcArgs st
 
 	switch funcName {
 	case "get_geocode_data":
-    	fmt.Println("GET_GEOCODE_DATA TOOL CALLED!")
+		fmt.Println("GET_GEOCODE_DATA TOOL CALLED!")
 		// Wrap in a struct with Locations field
 		var payload struct {
 			Locations []struct {

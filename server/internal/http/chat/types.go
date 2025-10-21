@@ -50,7 +50,7 @@ type Controller struct {
 	Model
 	History   []openai.ChatCompletionMessageParamUnion // context memory to store messages
 	Itinerary *Itinerary
-	Tools calltools.ToolBox
+	Tools     calltools.ToolBox
 }
 
 type Handler struct {

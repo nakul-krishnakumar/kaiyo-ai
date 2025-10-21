@@ -13,7 +13,7 @@ func New() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle("POST /{$}", mw.SSEHandler(http.HandlerFunc(h.PostChat))) //(sse output) api/v1/chats/
 	mux.HandleFunc("GET /history/{chatID}", h.GetHistory)                // api/v1/chats/history/{chatID}
-	mux.HandleFunc("GET /itinerary/{chatID}", h.GetItinerary)                // api/v1/itinerary/history/{chatID}
+	mux.HandleFunc("GET /itinerary/{chatID}", h.GetItinerary)            // api/v1/itinerary/history/{chatID}
 
 	return mux
 }

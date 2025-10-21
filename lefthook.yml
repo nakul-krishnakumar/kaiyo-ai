@@ -3,13 +3,19 @@ pre-commit:
   commands:
     client-lint:
       run: cd client && npm run lint
-      include: "^client/"
+      # include: "^client/"
     client-format:
       run: cd client && npm run format
-      include: "^client/"
+      # include: "^client/"
+    server-lint-and-format:
+      run: cd server && gofmt -l -w .
+      # include: "^server/"
 
 pre-push:
   commands:
     client-build:
       run: cd client && npm run build
-      include: "^client/"
+      # include: "^client/"
+    server-build:
+      run: cd server && go build ./...
+      # include: "^server/"
