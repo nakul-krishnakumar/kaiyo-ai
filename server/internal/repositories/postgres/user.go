@@ -83,7 +83,7 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 
 func (r *UserRepo) UpdateLastLogin(ctx context.Context, userID uuid.UUID) error {
 	query := `
-	UPDATE TABLE user 
+	UPDATE users 
 	SET last_login_at = NOW()
 	WHERE id = $1`
 

@@ -91,7 +91,7 @@ func (h *Handler) getClientIP(r *http.Request) string {
 	return ip
 }
 
-// ✅ Get preferred language from Accept-Language header
+// Get preferred language from Accept-Language header
 func (h *Handler) getLanguage(r *http.Request) string {
 	lang := r.Header.Get("Accept-Language")
 	if lang == "" {
@@ -111,7 +111,7 @@ func (h *Handler) getLanguage(r *http.Request) string {
 	return strings.TrimSpace(lang)
 }
 
-// ✅ Parse platform from User-Agent
+// Parse platform from User-Agent
 func (h *Handler) parsePlatform(userAgent string) string {
 	ua := strings.ToLower(userAgent)
 
@@ -133,7 +133,7 @@ func (h *Handler) parsePlatform(userAgent string) string {
 	}
 }
 
-// ✅ Parse browser from User-Agent
+// Parse browser from User-Agent
 func (h *Handler) parseBrowser(userAgent string) string {
 	ua := strings.ToLower(userAgent)
 
@@ -157,7 +157,7 @@ func (h *Handler) parseBrowser(userAgent string) string {
 	}
 }
 
-// ✅ Parse OS version from User-Agent
+// Parse OS version from User-Agent
 func (h *Handler) parseOS(userAgent string) string {
 	ua := strings.ToLower(userAgent)
 
@@ -213,7 +213,7 @@ func (h *Handler) parseOS(userAgent string) string {
 	}
 }
 
-// ✅ Parse device type from User-Agent
+// Parse device type from User-Agent
 func (h *Handler) parseDeviceType(userAgent string) string {
 	ua := strings.ToLower(userAgent)
 
