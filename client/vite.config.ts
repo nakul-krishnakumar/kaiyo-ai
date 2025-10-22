@@ -1,25 +1,19 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
 import path from "path";
-export default defineConfig(() => ({
-  server: {
-    host: "::",
-    port: 8080,
-    proxy: {
-      "/auth": {
-        target: "http://localhost:8081",
-        changeOrigin: true,
-      },
-      "/api": {
-        target: "http://localhost:8081",
-        changeOrigin: true,
-      },
-    },
-  },
-  plugins: [react()],
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
+
+export default defineConfig({
+  plugins: [
+    tanstackRouter({
+      target: "react",
+      autoCodeSplitting: true,
+    }),
+    react(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+});
