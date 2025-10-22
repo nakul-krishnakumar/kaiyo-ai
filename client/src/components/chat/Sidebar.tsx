@@ -8,7 +8,7 @@ interface Chat {
   title: string;
   timestamp: string;
 }
-import { useNavigate } from "@tanstack/react-router";
+
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -33,12 +33,10 @@ export function Sidebar({
   const handleNewChat = () => {
     onNewChat();
   };
-const navigate = useNavigate();
-    const handleLogout = () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        navigate({ to: "/login" });
-    };
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <>
@@ -50,12 +48,12 @@ const navigate = useNavigate();
         />
       )}
 
-      {/* Sidebar */}
-      <div className="h-full bg-gray-50 flex flex-col">
+      {/* Sidebar - Full width when open, icon-only when closed */}
+      <div className={`h-full bg-gray-50 flex flex-col transition-all duration-300 ${isOpen ? 'w-full' : 'w-20'}`}>
         {isOpen ? (
-          // Full sidebar
+          // Expanded Sidebar
           <>
-            <div className="p-6">
+            <div className="py-6 px-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-black">Kaiyo AI</h2>
                 <Button
@@ -69,7 +67,7 @@ const navigate = useNavigate();
                 </Button>
               </div>
 
-              <Button onClick={handleNewChat} className="w-full mb-6 comic-button bg-purple-600 hover:bg-purple-500">
+              <Button onClick={handleNewChat} className="w-full mb-6 comic-button bg-purple-600 hover:bg-purple-700">
                 <Plus className="w-4 h-4 mr-2" />
                 New Chat
               </Button>
@@ -102,20 +100,19 @@ const navigate = useNavigate();
               </div>
             </div>
 
-            {/* Logout button */}
             <div className="p-6 border-t border-gray-200">
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full flex items-center justify-center space-x-2 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+              <Button 
+                onClick={handleLogout} 
+                variant="outline" 
+                className="w-full text-purple-600 hover:bg-purple-200 hover:text-purple-800 comic-button"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
               </Button>
             </div>
           </>
         ) : (
-          // Collapsed sidebar - icons only
+          // Collapsed Sidebar - Icon only
           <div className="flex flex-col items-center py-6 space-y-4">
             <Button
               variant="ghost"
@@ -127,16 +124,19 @@ const navigate = useNavigate();
               <PanelLeft className="w-5 h-5" />
             </Button>
 
+            <div className="border-t border-gray-300 w-12" />
+
             <Button
-              onClick={handleNewChat}
+              variant="ghost"
               size="icon"
-              className="comic-button"
+              onClick={handleNewChat}
+              className="hover:bg-gray-200"
               title="New Chat"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
             </Button>
 
-            <div className="flex-1 flex flex-col space-y-2 mt-4">
+            <div className="flex-1 flex flex-col items-center space-y-3 pt-4">
               {chats.map((chat) => (
                 <Button
                   key={chat.id}
@@ -148,23 +148,22 @@ const navigate = useNavigate();
                   }`}
                   title={chat.title}
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <MessageSquare className="w-5 h-5" />
                 </Button>
               ))}
             </div>
 
-            {/* Logout button for collapsed view */}
-            <div className="mt-auto pt-4 border-t border-gray-200">
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                size="icon"
-                className="cursor-pointer text-destructive hover:bg-red-50 hover:text-red-600"
-                title="Logout"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
+            <div className="border-t border-gray-300 w-12 mt-auto" />
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="hover:bg-purple-200"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
           </div>
         )}
       </div>
