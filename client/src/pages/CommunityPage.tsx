@@ -1,15 +1,9 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, Heart, Share, Search, Plus } from "lucide-react";
 
 export default function CommunityPage() {
-
   const posts = [
     {
       id: 1,
