@@ -1,143 +1,88 @@
 import { useState } from "react";
-import { ChatSidebar } from "@/components/Chat/ChatSidebar";
-import { ChatMessages, Message } from "@/components/Chat/ChatMessages";
-import { ChatInput } from "@/components/Chat/ChatInput";
-import { TravelResults, TravelData } from "@/components/Chat/TravelResults";
-
-const ChatPage = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "bot",
-      content:
-        "Hello! I'm your personal Travel Planner AI. Where are you headed, or should I help you discover your next adventure? 🌍",
-      timestamp: new Date(),
-    },
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
+import { Sidebar } from "@/components/chat/Sidebar";
+import { ChatArea } from "@/components/chat/ChatArea";
+import { MapPanel } from "@/components/chat/MapPanel";
+export default function ChatPage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentChatId, setCurrentChatId] = useState("1");
+  const [locations, setLocations] = useState([
+    { name: "Coorg", lat: 12.3375, lng: 75.8069, type: "destination" },
+    { name: "Raja's Seat", lat: 12.4244, lng: 75.7382, type: "attraction" },
+    { name: "Tadiandamol Peak", lat: 12.2458, lng: 75.7167, type: "trekking" },
+    { name: "Abbey Falls", lat: 12.4544, lng: 75.7167, type: "waterfall" },
   ]);
-
-  const [chatHistory] = useState([
-    { id: "1", title: "Trip to Coorg", date: "Today" },
-    { id: "2", title: "Kerala Backwaters", date: "Yesterday" },
-  ]);
-
-  const [currentChatId, setCurrentChatId] = useState<string>("1");
-  const [travelData, setTravelData] = useState<TravelData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSendMessage = async (content: string) => {
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
-
-    // Simulate API call to backend
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "bot",
-        content: generateMockResponse(content),
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botResponse]);
-
-      // If the message is about a trip, generate mock travel data
-      if (
-        content.toLowerCase().includes("coorg") ||
-        content.toLowerCase().includes("trip")
-      ) {
-        setTravelData({
-          destination: "3-Day Itinerary in Coorg",
-          totalCost: "10000Rs",
-          dates: "Feb 12 - Feb 19, 2025",
-          coordinates: [12.4244, 75.7382],
-          itinerary: [
-            {
-              day: 1,
-              title: "Arrival and Relaxation",
-              activities: [
-                "Arrive at Madikeri and check into homestay",
-                "Sunset at Raja's Seat",
-                "Explore local markets",
-              ],
-            },
-            {
-              day: 2,
-              title: "Nature and Adventure",
-              activities: [
-                "Morning trek to Tadiandamol peak",
-                "Local Coorgi lunch at spice plantation",
-                "Visit Abbey Falls",
-              ],
-            },
-            {
-              day: 3,
-              title: "Culture and Departure",
-              activities: [
-                "Visit Namdroling Monastery",
-                "Coffee plantation tour",
-                "Departure from Madikeri",
-              ],
-            },
-          ],
-        });
-      }
-
-      setIsLoading(false);
-    }, 1000);
-  };
-
-  const generateMockResponse = (userMessage: string): string => {
-    if (userMessage.toLowerCase().includes("coorg")) {
-      return "Absolutely! 🌿 For a peaceful and scenic getaway, here are a few handpicked options:\n\n• Coorg, Karnataka – lush coffee plantations and misty hills\n• Alleppey, Kerala – serene backwaters and houseboats\n• Tawang, Arunachal Pradesh – calm monasteries and Himalayan views\n\nWant me to check best travel dates or stay options in one of these?";
-    }
-    if (userMessage.toLowerCase().includes("3-day")) {
-      return "Perfect choice! Here's a sample 3-day plan for Coorg:\n\n🏔️ Day 1: Arrive and relax at a homestay in Madikeri. Sunset at Raja's Seat.\n🥾 Day 2: Morning trek to Tadiandamol peak, local Coorgi lunch, spice plantation tour\n🏛️ Day 3: Visit Abbey Falls and Namdroling Monastery before departure\n\nShall I prepare a detailed itinerary with estimated costs?";
-    }
-    return "I'd be happy to help you plan that! Could you tell me more about your preferences, budget, or the type of experience you're looking for?";
-  };
 
   const handleNewChat = () => {
-    setMessages([
-      {
-        id: Date.now().toString(),
-        role: "bot",
-        content:
-          "Hello! I'm your personal Travel Planner AI. Where are you headed, or should I help you discover your next adventure? 🌍",
-        timestamp: new Date(),
-      },
-    ]);
-    setTravelData(null);
-    setCurrentChatId(Date.now().toString());
+    const newChatId = Date.now().toString();
+    setCurrentChatId(newChatId);
+    setSidebarOpen(false);
   };
 
-  const handleSelectChat = (id: string) => {
-    setCurrentChatId(id);
-    // In a real app, load chat history from storage
+  const handleSelectChat = (chatId: string) => {
+    setCurrentChatId(chatId);
+    setSidebarOpen(false);
+  };
+
+  const handleLocationUpdate = (newLocations: any[]) => {
+    setLocations(newLocations);
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <ChatSidebar
-        chatHistory={chatHistory}
-        onNewChat={handleNewChat}
-        onSelectChat={handleSelectChat}
-        currentChatId={currentChatId}
-      />
-
-      <div className="flex-1 flex flex-col">
-        <ChatMessages messages={messages} />
-        <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+    <div className="chat-container flex bg-gray-50">
+      {/* Sidebar - Desktop */}
+      <div className={`sidebar-panel ${sidebarOpen ? "block" : ""} lg:block`}>
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          currentChatId={currentChatId}
+        />
       </div>
 
-      <TravelResults travelData={travelData} />
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header - only show on mobile */}
+          <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <h1 className="text-lg font-semibold">Kaiyo AI</h1>
+            <div></div>
+          </div>
+
+          {/* Chat Messages - Full height on mobile, shared on desktop */}
+          <div className="flex-1 lg:h-screen">
+            <ChatArea onLocationUpdate={handleLocationUpdate} />
+          </div>
+        </div>
+
+        {/* Map Panel - Desktop only */}
+        <div className="map-panel hidden lg:flex lg:flex-col">
+          <MapPanel locations={locations} />
+        </div>
+      </div>
+
+      {/* Mobile Map Panel - Bottom Sheet */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black rounded-t-2xl z-40">
+        <div className="h-80 overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2"></div>
+            <h3 className="text-center font-semibold">Itinerary</h3>
+          </div>
+          <div className="h-64">
+            <MapPanel locations={locations} />
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default ChatPage;
+}

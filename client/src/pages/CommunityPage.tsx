@@ -1,285 +1,199 @@
-import { motion } from "framer-motion";
-import { useRouter } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft,
-  MessageSquare,
-  PenTool,
-  TrendingUp,
-  Heart,
-  MessageCircle,
-  Eye,
-  Plus,
-} from "lucide-react";
-import { logout } from "@/lib/tanstack-query";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { MessageCircle, Heart, Share, Search, Plus } from "lucide-react";
 
-const CommunityPage = () => {
-  const router = useRouter();
+export default function CommunityPage() {
 
-  const questions = [
+  const posts = [
     {
-      title: "Best time to visit Japan for cherry blossoms?",
-      author: "Sarah M.",
-      replies: 23,
-      views: 456,
-      likes: 12,
-      tags: ["Japan", "Spring", "Nature"],
+      id: 1,
+      author: "Sarah Johnson",
+      avatar: "SJ",
+      title: "Amazing 5-day Kerala backwaters experience!",
+      content:
+        "Just got back from an incredible houseboat journey through Alleppey and Kumarakom. The sunset views were absolutely breathtaking! Here are my top recommendations...",
+      likes: 24,
+      comments: 8,
+      timestamp: "2 hours ago",
+      tags: ["Kerala", "Backwaters", "Houseboat"],
     },
     {
-      title: "Budget-friendly hotels in Paris?",
-      author: "John D.",
-      replies: 18,
-      views: 342,
-      likes: 8,
-      tags: ["Paris", "Budget", "Hotels"],
+      id: 2,
+      author: "Mike Chen",
+      avatar: "MC",
+      title: "Budget-friendly Goa itinerary under ₹15,000",
+      content:
+        "Spent 4 days in Goa without breaking the bank! Stayed in hostels, ate at local joints, and still had an amazing time. Here's how I did it...",
+      likes: 42,
+      comments: 15,
+      timestamp: "5 hours ago",
+      tags: ["Goa", "Budget", "Beach"],
     },
     {
-      title: "Safety tips for solo female travelers in Bali",
-      author: "Maria L.",
-      replies: 31,
-      views: 678,
-      likes: 45,
-      tags: ["Bali", "Safety", "Solo Travel"],
-    },
-    {
-      title: "Visa requirements for traveling to Thailand",
-      author: "Alex K.",
-      replies: 15,
-      views: 290,
-      likes: 6,
-      tags: ["Thailand", "Visa", "Documentation"],
+      id: 3,
+      author: "Priya Sharma",
+      avatar: "PS",
+      title: "Solo female travel in Himachal - Safety tips",
+      content:
+        "Just completed a solo trek in Himachal Pradesh. Sharing some important safety tips and beautiful spots that are perfect for solo female travelers...",
+      likes: 67,
+      comments: 23,
+      timestamp: "1 day ago",
+      tags: ["Himachal", "Solo Travel", "Trekking", "Safety"],
     },
   ];
-
-  const blogs = [
-    {
-      title: "10 Hidden Gems in Southeast Asia",
-      author: "Travel Explorer",
-      excerpt:
-        "Discover lesser-known destinations that will take your breath away...",
-      likes: 156,
-      comments: 42,
-      readTime: "8 min read",
-      image: "🏝️",
-    },
-    {
-      title: "My 3-Month European Backpacking Journey",
-      author: "Nomad Sarah",
-      excerpt:
-        "From the streets of Barcelona to the fjords of Norway, here's everything I learned...",
-      likes: 203,
-      comments: 67,
-      readTime: "12 min read",
-      image: "🎒",
-    },
-    {
-      title: "Foodie Guide: Street Food in Vietnam",
-      author: "Chef Wanderer",
-      excerpt:
-        "The ultimate guide to experiencing authentic Vietnamese cuisine...",
-      likes: 189,
-      comments: 54,
-      readTime: "6 min read",
-      image: "🍜",
-    },
-  ];
-
-  const trending = [
-    { name: "Tokyo, Japan", travelers: 1240, trend: "+15%", image: "🗼" },
-    { name: "Paris, France", travelers: 980, trend: "+8%", image: "🗼" },
-    { name: "Bali, Indonesia", travelers: 856, trend: "+22%", image: "🏝️" },
-    { name: "Dubai, UAE", travelers: 742, trend: "+12%", image: "🏙️" },
-  ];
-
-  const handleLogout = () => {
-    logout();
-    router.navigate({ to: "/" });
-  };
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-7xl mx-auto"
-      >
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-hero bg-clip-text text-transparent">
-              Kaiyo Community
-            </h1>
-            <p className="text-muted-foreground">
-              Share experiences, ask questions, and inspire fellow travelers
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => router.navigate({ to: "/chat" })}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Chat
-            </Button>
-            <Button variant="ghost" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white comic-border border-b-4 p-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Travel Community</h1>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            New Post
+          </Button>
         </div>
+      </div>
 
-        <Tabs defaultValue="questions" className="w-full">
-          <TabsList className="grid w-full md:w-auto grid-cols-3 mb-6">
-            <TabsTrigger value="questions">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Questions
-            </TabsTrigger>
-            <TabsTrigger value="blogs">
-              <PenTool className="mr-2 h-4 w-4" />
-              Blogs
-            </TabsTrigger>
-            <TabsTrigger value="trending">
-              <TrendingUp className="mr-2 h-4 w-4" />
-              Trending
-            </TabsTrigger>
-          </TabsList>
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="grid lg:grid-cols-4 gap-6">
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle className="text-lg">Popular Topics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[
+                    "Kerala Backwaters",
+                    "Goa Beaches",
+                    "Himachal Trekking",
+                    "Rajasthan Culture",
+                    "South India Food",
+                  ].map((topic) => (
+                    <Button
+                      key={topic}
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                    >
+                      #{topic.replace(" ", "")}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-          <TabsContent value="questions" className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Community Questions</h2>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Ask Question
-              </Button>
-            </div>
-            {questions.map((question, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="p-6 hover-scale cursor-pointer">
-                  <h3 className="text-lg font-semibold mb-3">
-                    {question.title}
-                  </h3>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {question.tags.map((tag, i) => (
-                      <Badge key={i} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Travel Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-600">Active Travelers</p>
+                    <p className="text-2xl font-bold text-purple-600">2,847</p>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span className="font-medium">by {question.author}</span>
-                    <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-4 w-4" />
-                        {question.likes}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        {question.replies}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        {question.views}
-                      </span>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Posts This Week</p>
+                    <p className="text-2xl font-bold text-blue-600">156</p>
                   </div>
-                </Card>
-              </motion.div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="blogs" className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Travel Blogs</h2>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Write Blog
-              </Button>
-            </div>
-            {blogs.map((blog, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="p-6 hover-scale cursor-pointer">
-                  <div className="flex gap-4">
-                    <div className="text-5xl">{blog.image}</div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-2">
-                        {blog.title}
-                      </h3>
-                      <p className="text-muted-foreground mb-3">
-                        {blog.excerpt}
-                      </p>
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-4 text-muted-foreground">
-                          <span className="font-medium">by {blog.author}</span>
-                          <span>{blog.readTime}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Heart className="h-4 w-4" />
-                            {blog.likes}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <MessageCircle className="h-4 w-4" />
-                            {blog.comments}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Countries Covered</p>
+                    <p className="text-2xl font-bold text-green-600">23</p>
                   </div>
-                </Card>
-              </motion.div>
-            ))}
-          </TabsContent>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <TabsContent value="trending" className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">
-              Trending Destinations
-            </h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {trending.map((dest, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {/* Search Bar */}
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="flex space-x-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search posts, destinations, or travelers..."
+                      className="pl-10"
+                    />
+                  </div>
+                  <Button>Search</Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Posts */}
+            <div className="space-y-6">
+              {posts.map((post) => (
+                <Card
+                  key={post.id}
+                  className="hover:shadow-lg transition-shadow"
                 >
-                  <Card className="p-6 hover-scale cursor-pointer">
-                    <div className="flex items-center gap-4">
-                      <span className="text-4xl">{dest.image}</span>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg mb-1">
-                          {dest.name}
-                        </h3>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                          <span>{dest.travelers} travelers</span>
-                          <Badge
-                            variant="secondary"
-                            className="bg-primary/10 text-primary"
-                          >
-                            {dest.trend}
-                          </Badge>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-semibold text-purple-600">
+                            {post.avatar}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-semibold">{post.author}</p>
+                          <p className="text-sm text-gray-500">
+                            {post.timestamp}
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </Card>
-                </motion.div>
+                    <CardTitle className="text-xl mt-3">{post.title}</CardTitle>
+                  </CardHeader>
+
+                  <CardContent>
+                    <p className="text-gray-700 mb-4">{post.content}</p>
+
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center space-x-4 pt-4 border-t">
+                      <Button variant="ghost" size="sm">
+                        <Heart className="w-4 h-4 mr-1" />
+                        {post.likes}
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <MessageCircle className="w-4 h-4 mr-1" />
+                        {post.comments}
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <Share className="w-4 h-4 mr-1" />
+                        Share
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-          </TabsContent>
-        </Tabs>
-      </motion.div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default CommunityPage;
+}
