@@ -1,94 +1,66 @@
-import { motion } from "framer-motion";
-import { useRouter } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { Compass, TrendingUp } from "lucide-react";
-import { isAuthenticated } from "@/lib/tanstack-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { MessageCircle, MapPin } from "lucide-react";
 
-const LandingPage = () => {
-  const router = useRouter();
-
-  const handlePlanTrip = () => {
-    if (isAuthenticated()) {
-      router.navigate({ to: "/chat" });
-    } else {
-      router.navigate({ to: "/login" });
-    }
-  };
-
-  const handleTrends = () => {
-    if (isAuthenticated()) {
-      router.navigate({ to: "/community" });
-    } else {
-      router.navigate({ to: "/login" });
-    }
-  };
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center max-w-4xl"
-      >
-        <motion.h1
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent"
-        >
-          Kaiyo AI
-        </motion.h1>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full">
+        <div className="text-center mb-12">
+          <h1 className="text-6xl font-bold text-gray-900 mb-4">Kaiyo AI</h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Your Personal Travel Planning Assistant
+          </p>
+        </div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="text-xl md:text-2xl text-muted-foreground mb-12"
-        >
-          Your Personal AI Travel Planner
-        </motion.p>
+        <div className="grid md:grid-cols-2 gap-8">
+          <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-4 bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center">
+                <MapPin className="w-8 h-8 text-purple-600" />
+              </div>
+              <CardTitle className="text-2xl">Plan Your Trip</CardTitle>
+              <CardDescription className="text-lg">
+                Get personalized travel recommendations and itineraries powered
+                by AI
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/chat">
+                <Button className="w-full" size="lg">
+                  Start Planning
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-        >
-          <Button
-            variant="hero"
-            size="lg"
-            onClick={handlePlanTrip}
-            className="w-full sm:w-auto min-w-[240px]"
-          >
-            <Compass className="mr-2" />
-            Plan Your Next Trip
-          </Button>
-
-          <Button
-            variant="default"
-            size="lg"
-            onClick={handleTrends}
-            className="w-full sm:w-auto min-w-[240px]"
-          >
-            <TrendingUp className="mr-2" />
-            Know the Trend
-          </Button>
-        </motion.div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.5 }}
-        className="mt-20 text-center"
-      >
-        <p className="text-sm text-muted-foreground">
-          Discover personalized travel itineraries powered by AI
-        </p>
-      </motion.div>
+          <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 p-4 bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center">
+                <MessageCircle className="w-8 h-8 text-blue-600" />
+              </div>
+              <CardTitle className="text-2xl">Talk to Community</CardTitle>
+              <CardDescription className="text-lg">
+                Connect with fellow travelers and share experiences
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link to="/community">
+                <Button className="w-full" variant="outline" size="lg">
+                  Join Community
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default LandingPage;
+}

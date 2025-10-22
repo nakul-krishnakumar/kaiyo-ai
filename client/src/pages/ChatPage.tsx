@@ -183,9 +183,13 @@ const ChatPage = () => {
     setIsLoading(false);
   };
 
-  const handleSelectChat = (id: string) => {
-    setCurrentChatId(id);
-    // In a real app, load chat history from storage
+  const handleSelectChat = (chatId: string) => {
+    setCurrentChatId(chatId);
+    setSidebarOpen(false);
+  };
+
+  const handleLocationUpdate = (newLocations: any[]) => {
+    setLocations(newLocations);
   };
 
   return (
@@ -202,9 +206,47 @@ const ChatPage = () => {
         <ChatInput onSend={handleSendMessage} disabled={isLoading} />
       </div>
 
-      <TravelResults travelData={travelData} />
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header - only show on mobile */}
+          <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <h1 className="text-lg font-semibold">Kaiyo AI</h1>
+            <div></div>
+          </div>
+
+          {/* Chat Messages - Full height on mobile, shared on desktop */}
+          <div className="flex-1 lg:h-screen">
+            <ChatArea onLocationUpdate={handleLocationUpdate} />
+          </div>
+        </div>
+
+        {/* Map Panel - Desktop only */}
+        <div className="map-panel hidden lg:flex lg:flex-col">
+          <MapPanel locations={locations} />
+        </div>
+      </div>
+
+      {/* Mobile Map Panel - Bottom Sheet */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-black rounded-t-2xl z-40">
+        <div className="h-80 overflow-hidden">
+          <div className="p-4 border-b border-gray-200">
+            <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-2"></div>
+            <h3 className="text-center font-semibold">Itinerary</h3>
+          </div>
+          <div className="h-64">
+            <MapPanel locations={locations} />
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default ChatPage;
+}
