@@ -3,13 +3,11 @@ const API_URL: string = (import.meta as any).env?.VITE_API_URL ?? "";
 export function getTokens() {
   return {
     access: localStorage.getItem("access_token"),
-    accessExpiresAt: localStorage.getItem("access_expires_at"),
+    accessExpiresAt: Number(localStorage.getItem("access_expires_at")),
   };
 }
 
-// Accepts server login/refresh responses
 export function setTokens(data: any) {
-  // Server returns { access_token, expires_in }
   if (data?.access_token) {
     localStorage.setItem("access_token", data.access_token);
   }
@@ -21,21 +19,22 @@ export function setTokens(data: any) {
 }
 
 export function isAuthenticated(): boolean {
-  const { access } = getTokens();
-  return Boolean(access);
+  const { access, accessExpiresAt } = getTokens();
+  if (!access) return false;
+  if (accessExpiresAt && Date.now() > accessExpiresAt) return false; // token expired
+  return true;
 }
 
 export async function logout() {
   try {
     if (API_URL) {
-      // Invalidate refresh cookie on server
       await fetch(`${API_URL}/auth/logout`, {
         method: "GET",
         credentials: "include",
       });
     }
   } catch {
-    // ignore network errors on logout
+    // ignore network errors
   }
   localStorage.removeItem("access_token");
   localStorage.removeItem("access_expires_at");
@@ -47,11 +46,10 @@ async function refreshAccessToken() {
   try {
     const res = await fetch(`${API_URL}/auth/refresh`, {
       method: "GET",
-      credentials: "include", // send cookie with request
+      credentials: "include",
     });
     if (!res.ok) return null;
     const data = await res.json();
-    // server returns { message, access_token }
     setTokens(data);
     return data;
   } catch {
@@ -59,10 +57,7 @@ async function refreshAccessToken() {
   }
 }
 
-export async function fetchClient(
-  input: string,
-  init?: RequestInit,
-): Promise<Response> {
+export async function fetchClient(input: string, init?: RequestInit): Promise<Response> {
   const { access } = getTokens();
   const base = API_URL;
 
@@ -72,9 +67,10 @@ export async function fetchClient(
   let response = await fetch(`${base}${input}`, {
     ...init,
     headers,
-    credentials: "include", // include cookies for refresh/logout when needed
+    credentials: "include",
   });
 
+  // Retry if unauthorized
   if (response.status === 401) {
     const refreshed = await refreshAccessToken();
     if (refreshed?.access_token) {

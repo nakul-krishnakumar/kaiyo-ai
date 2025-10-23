@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Sidebar } from "@/components/chat/Sidebar";
 import { ChatArea } from "@/components/chat/ChatArea";
 import { MapPanel } from "@/components/chat/MapPanel";
+
 export default function ChatPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentChatId, setCurrentChatId] = useState("1");
   const [locations, setLocations] = useState([
     { name: "Coorg", lat: 12.3375, lng: 75.8069, type: "destination" },
@@ -13,12 +14,13 @@ export default function ChatPage() {
     { name: "Tadiandamol Peak", lat: 12.2458, lng: 75.7167, type: "trekking" },
     { name: "Abbey Falls", lat: 12.4544, lng: 75.7167, type: "waterfall" },
   ]);
-
+const userId = "123";
   const handleNewChat = () => {
     const newChatId = Date.now().toString();
     setCurrentChatId(newChatId);
     setSidebarOpen(false);
   };
+
 
   const handleSelectChat = (chatId: string) => {
     setCurrentChatId(chatId);
@@ -29,39 +31,58 @@ export default function ChatPage() {
     setLocations(newLocations);
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="chat-container flex bg-gray-50">
       {/* Sidebar - Desktop */}
-      <div className={`sidebar-panel ${sidebarOpen ? "block" : ""} lg:block`}>
-        <Sidebar
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
-          onNewChat={handleNewChat}
-          onSelectChat={handleSelectChat}
-          currentChatId={currentChatId}
-        />
-      </div>
+  <div
+    className={`transition-all duration-300 
+                ${sidebarOpen ? "w-80" : "w-20"}`}
+  >
+    <Sidebar
+      isOpen={sidebarOpen}
+      onToggle={toggleSidebar}
+      onNewChat={handleNewChat}
+      onSelectChat={handleSelectChat}
+      currentChatId={currentChatId}
+    />
+  </div>
+
 
       {/* Main Content */}
       <div className="flex-1 flex">
         {/* Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Header - only show on mobile */}
-          <div className="lg:hidden bg-white border-b p-4 flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            <h1 className="text-lg font-semibold">Kaiyo AI</h1>
+          {/* Header */}
+          <div className="bg-white border-b p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="lg:flex"
+              >
+                {sidebarOpen ? (
+                  <PanelLeftClose className="w-5 h-5" />
+                ) : (
+                  <PanelLeft className="w-5 h-5" />
+                )}
+              </Button>
+              <h1 className="text-lg font-semibold">Kaiyo AI</h1>
+            </div>
             <div></div>
           </div>
 
           {/* Chat Messages - Full height on mobile, shared on desktop */}
           <div className="flex-1 lg:h-screen">
-            <ChatArea onLocationUpdate={handleLocationUpdate} />
+            <ChatArea
+              chatId={currentChatId}
+              userId={userId}
+              key={currentChatId}
+            />
           </div>
         </div>
 

@@ -1,19 +1,6 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Button } from "@/components/ui/button";
 import { MapPin, Utensils, Hotel, Plane } from "lucide-react";
-import L from "leaflet";
-
-// Fix for default markers in react-leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
 
 interface Location {
   name: string;
@@ -52,31 +39,16 @@ export function MapPanel({ locations }: MapPanelProps) {
         </div>
       </div>
 
-      {/* Map */}
+      {/* Map Placeholder */}
       <div className="mb-4 comic-border rounded-2xl overflow-hidden">
-        <div className="h-48 w-full">
-          <MapContainer
-            center={center}
-            zoom={11}
-            style={{ height: "100%", width: "100%" }}
-            className="rounded-2xl"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {locations.map((location, index) => (
-              <Marker key={index} position={[location.lat, location.lng]}>
-                <Popup>
-                  <div>
-                    <strong>{location.name}</strong>
-                    <br />
-                    Type: {location.type}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+        <div className="h-48 w-full bg-gray-100 flex items-center justify-center">
+          <div className="text-center">
+            <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <p className="text-sm text-gray-500">Map will be displayed here</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {locations.length} location{locations.length !== 1 ? 's' : ''} found
+            </p>
+          </div>
         </div>
       </div>
 

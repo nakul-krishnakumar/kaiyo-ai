@@ -5,7 +5,7 @@ import { isAuthenticated } from "@/lib/tanstack-query";
 export const Route = createFileRoute("/chat")({
   component: ChatPage,
   beforeLoad: () => {
-    if (!isAuthenticated()) {
+    if (typeof window !== "undefined" && !isAuthenticated()) {
       throw redirect({
         to: "/login",
       });
