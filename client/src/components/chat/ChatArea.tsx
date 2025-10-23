@@ -2,124 +2,137 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, User, Bot } from "lucide-react";
+import { fetchClient } from "@/lib/tanstack-query";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   id: string;
   type: "user" | "bot";
   content: string;
   timestamp: string;
+  isStreaming?: boolean;
 }
 
 interface ChatAreaProps {
-  onLocationUpdate?: (locations: any[]) => void;
+  chatId: string;
+  userId: string;
 }
 
-export function ChatArea({ onLocationUpdate }: ChatAreaProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "bot",
-      content:
-        "Hello! I'm your personal Travel Planner AI. Where are you headed, or should I help you discover your next adventure? 😊",
-      timestamp: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      type: "user",
-      content:
-        "Hey! I want to go on a relaxing trip somewhere in India. Any suggestions?",
-      timestamp: new Date().toISOString(),
-    },
-    {
-      id: "3",
-      type: "bot",
-      content:
-        "Absolutely! 😊 For a peaceful and scenic getaway, here are a few handpicked options:\n\n• Coorg, Karnataka – lush coffee plantations and misty hills\n• Alleppey, Kerala – serene backwaters and houseboats\n• Wayanad, Kerala – calm monasteries and Himalayan views\n\nWant me to check best travel dates or stay options in Alleppey?",
-      timestamp: new Date().toISOString(),
-    },
-    {
-      id: "4",
-      type: "user",
-      content:
-        "Coorg sounds good! I want a 3-day plan with nature, light trekking, and good food.",
-      timestamp: new Date().toISOString(),
-    },
-    {
-      id: "5",
-      type: "bot",
-      content:
-        "Perfect choice! Here's a sample 3-day plan for Coorg:\n\n🌟 Day 1: Arrive and relax at a homestay. Sunset at Raja's Seat.\n🌟 Day 2: Morning trek to Tadiandamol peak, local Coorg lunch, spice plantation tour\n🌟 Day 3: Visit Abbey Falls and Namdroling Monastery before departure\n\nShall I prepare a detailed itinerary with estimated costs?",
-      timestamp: new Date().toISOString(),
-    },
-  ]);
-
+export function ChatArea({ chatId, userId }: ChatAreaProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Scroll to bottom
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useEffect(() => scrollToBottom(), [messages]);
 
+  // Welcome message on new chat
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    setMessages([
+      {
+        id: "welcome",
+        type: "bot",
+        content:
+          "Hello! I'm your personal Travel Planner AI. Where are you headed, or should I help you discover your next adventure? 😊",
+        timestamp: new Date().toISOString(),
+        isStreaming: false,
+      },
+    ]);
+    setIsTyping(false);
+  }, [chatId]);
 
   const handleSend = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content: inputValue,
       timestamp: new Date().toISOString(),
+      isStreaming: false,
     };
-
     setMessages((prev) => [...prev, userMessage]);
+
+    const messageContent = inputValue;
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response with SSE
-    setTimeout(() => {
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "bot",
-        content:
-          "Of course! Here's what I found for you:\n\n🏨 Top-rated homestays (under ₹1500/night):\n• Green Woods Stay – near Madikeri town, traditional meals included\n• River Mist Home – scenic river view, WiFi, peaceful location\n\n🚌 Bus options from Bangalore:\n• KSRTC Volvo departs 10:00 PM, arrives 6:00 AM\n• Private Volvo (₹950) – more flexible timings\n\nWould you like me to reserve a homestay and alert you when bus bookings open?",
-        timestamp: new Date().toISOString(),
-      };
+    const botMessageId = (Date.now() + 1).toString();
+    const streamingMessage: Message = {
+      id: botMessageId,
+      type: "bot",
+      content: "",
+      timestamp: new Date().toISOString(),
+      isStreaming: true,
+    };
+    setMessages((prev) => [...prev, streamingMessage]);
 
-      setMessages((prev) => [...prev, botMessage]);
-      setIsTyping(false);
+    try {
+      const response = await fetchClient("/api/v1/chats/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: messageContent, chatId, userId }),
+      });
 
-      // Update map with Coorg location
-      if (onLocationUpdate) {
-        onLocationUpdate([
-          { name: "Coorg", lat: 12.3375, lng: 75.8069, type: "destination" },
-          {
-            name: "Raja's Seat",
-            lat: 12.4244,
-            lng: 75.7382,
-            type: "attraction",
-          },
-          {
-            name: "Tadiandamol Peak",
-            lat: 12.2458,
-            lng: 75.7167,
-            type: "trekking",
-          },
-          {
-            name: "Abbey Falls",
-            lat: 12.4544,
-            lng: 75.7167,
-            type: "waterfall",
-          },
-        ]);
+      if (!response.ok || !response.body) throw new Error("Failed to receive streaming response");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const content = line.slice(6);
+            if (content && content !== "[DONE]") {
+              fullResponse += content;
+
+              // Update streaming content
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === botMessageId
+                    ? { ...msg, content: fullResponse, isStreaming: true }
+                    : msg
+                )
+              );
+            }
+          }
+        }
       }
-    }, 2000);
+
+      // Mark streaming complete
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId
+            ? { ...msg, content: fullResponse.replace(/\\n/g, "\n"), isStreaming: false }
+            : msg
+        )
+      );
+
+      setIsTyping(false);
+    } catch (error) {
+      console.error("Error streaming message:", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMessageId ? { ...msg, content: "Error", isStreaming: false } : msg
+        )
+      );
+      setIsTyping(false);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -128,7 +141,7 @@ export function ChatArea({ onLocationUpdate }: ChatAreaProps) {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      {/* Messages */}
+      {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.map((message) => (
           <div
@@ -137,80 +150,87 @@ export function ChatArea({ onLocationUpdate }: ChatAreaProps) {
           >
             <div
               className={`flex items-start space-x-3 max-w-[85%] ${
-                message.type === "user"
-                  ? "flex-row-reverse space-x-reverse"
-                  : ""
+                message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
               }`}
             >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  message.type === "user"
-                    ? "bg-black text-white"
-                    : "bg-black text-white"
-                }`}
-              >
-                {message.type === "user" ? (
-                  <User className="w-4 h-4" />
-                ) : (
-                  <Bot className="w-4 h-4" />
-                )}
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-black text-white">
+                {message.type === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
 
               <div
                 className={`p-4 rounded-2xl ${
                   message.type === "user"
-                    ? "bg-purple-500 text-white comic-border border-purple-600"
-                    : "bg-gray-50 text-gray-900 comic-border border-gray-200"
+                    ? "bg-purple-500 text-white border border-purple-600"
+                    : "bg-gray-50 text-gray-900 border border-gray-200"
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                  {message.content}
-                </p>
+                {message.type === "bot" ? (
+                  message.isStreaming ? (
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                      {message.content}
+                    </p>
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => <h1 className="text-xl font-bold mb-3 mt-2">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-4">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-base font-semibold mb-2 mt-3">{children}</h3>,
+                        p: ({ children }) => <p className="mb-2 leading-relaxed">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1 ml-2">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1 ml-2">{children}</ol>,
+                        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                        table: ({ children }) => <div className="overflow-x-auto my-3"><table className="min-w-full divide-y divide-border border border-border rounded-md text-xs">{children}</table></div>,
+                        thead: ({ children }) => <thead className="bg-muted/50">{children}</thead>,
+                        tbody: ({ children }) => <tbody className="divide-y divide-border bg-card">{children}</tbody>,
+                        th: ({ children }) => <th className="px-3 py-2 text-left text-xs font-medium text-foreground">{children}</th>,
+                        td: ({ children }) => <td className="px-3 py-2 text-xs text-foreground">{children}</td>,
+                        tr: ({ children }) => <tr className="hover:bg-muted/30">{children}</tr>,
+                        blockquote: ({ children }) => <blockquote className="border-l-4 border-primary pl-3 italic my-2 text-muted-foreground">{children}</blockquote>,
+                        pre: ({ children }) => <pre className="bg-muted p-3 rounded-md text-xs font-mono overflow-x-auto my-2 text-foreground">{children}</pre>,
+                        code: ({ children, className }) => {
+                          const isInline = !className;
+                          return isInline ? (
+                            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono text-foreground">{children}</code>
+                          ) : (
+                            <code className={className}>{children}</code>
+                          );
+                        },
+                        strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+                        em: ({ children }) => <em className="italic text-foreground">{children}</em>,
+                        hr: () => <hr className="my-4 border-border" />,
+                        a: ({ children, href }) => <a href={href} className="text-primary underline hover:text-primary/80" target="_blank" rel="noopener noreferrer">{children}</a>,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  )
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                )}
               </div>
             </div>
           </div>
         ))}
 
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
-              </div>
-              <div className="p-4 rounded-2xl bg-gray-50 comic-border border-gray-200">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.1s" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.2s" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+      {/* Input Field */}
       <div className="p-6 border-t border-gray-100">
         <div className="flex space-x-3">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Type your message..."
-            className="flex-1 comic-border border-gray-200 rounded-2xl px-4 py-3"
+            className="flex-1 border border-gray-200 rounded-2xl px-4 py-3"
+            disabled={isTyping}
           />
           <Button
             onClick={handleSend}
-            disabled={!inputValue.trim()}
-            className="comic-button rounded-2xl px-6"
+            disabled={!inputValue.trim() || isTyping}
+            className="rounded-2xl px-6"
           >
             <Send className="w-4 h-4" />
           </Button>
